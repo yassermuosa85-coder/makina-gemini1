@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>مكينة المحتوى — Gemini Edition | @y.tyle</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D0D14">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#0D0D14; --panel:#17171f; --panel2:#1f1f29; --line:#2c2c38;
+  --gold:#FFC857; --accent:#FF6B35; --paper:#E7E3DD;
+  --text:#EFEDE8; --dim:#9a97a3;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;min-height:100vh;text-align:right}
+.wrap{max-width:520px;margin:0 auto;padding:0 14px 90px}
+
+/* ===== Header ===== */
+header{padding:18px 2px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .avatar{width:42px;height:42px;border-radius:50%;background:var(--panel2);border:2px solid var(--gold);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.brand .avatar img{width:100%;height:100%;object-fit:cover}
+.brand h1{font-size:17px;font-weight:900;line-height:1.2}
+.brand .sub{font-size:11px;color:var(--dim);font-weight:600}
+.brand .sub b{color:var(--gold)}
+.pill{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bg);background:var(--gold);padding:4px 10px;border-radius:20px;font-weight:700}
+
+/* ===== Stats bar ===== */
+.statsbar{display:flex;gap:14px;padding:8px 4px;font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
+.statsbar b{color:var(--gold)}
+
+/* ===== Chips (archive filter) ===== */
+.chipsRow{display:flex;gap:6px;overflow-x:auto;margin:10px 0 4px;padding-bottom:4px}
+.chip{flex:none;background:var(--panel2);border:1px solid var(--line);color:var(--dim);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--gold);color:#0D0D14;border-color:var(--gold)}
+.starbtn{background:none;border:none;font-size:16px;cursor:pointer;vertical-align:-2px}
+
+/* ===== Idea bank ===== */
+.ideaCard{display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+/* ===== Tabs ===== */
+nav{position:fixed;bottom:0;right:0;left:0;background:var(--panel);border-top:1px solid var(--line);display:flex;overflow-x:auto;z-index:50}
+nav button{flex:none;min-width:64px;background:none;border:none;color:var(--dim);font-family:'Cairo';font-weight:700;font-size:11px;padding:10px 6px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button .ic{font-size:18px}
+nav button.on{color:var(--gold)}
+nav button.on .ic{transform:translateY(-1px)}
+.tab{display:none;padding-top:16px}
+.tab.on{display:block}
+
+/* ===== Common UI ===== */
+h2.sec{font-size:15px;font-weight:900;margin-bottom:4px}
+p.hint{font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.7}
+textarea,input[type=text],input[type=password],select{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--text);font-family:'Cairo';font-size:14px;padding:12px;outline:none;text-align:right}
+textarea{min-height:110px;resize:vertical;line-height:1.8}
+textarea:focus,input:focus{border-color:var(--gold)}
+.btn{width:100%;background:var(--gold);color:#131318;border:none;border-radius:12px;font-family:'Cairo';font-weight:900;font-size:15px;padding:14px;margin-top:12px;cursor:pointer}
+.btn:disabled{opacity:.45}
+.btn.orange{background:var(--accent);color:#fff}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.status{font-size:12px;color:var(--dim);margin-top:10px;min-height:18px;font-weight:600}
+.status.err{color:#ff7a6b}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;line-height:1.9;font-size:14px}
+.card .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:2px 10px;margin-bottom:8px;font-weight:700}
+.card h3{font-size:15px;font-weight:900;margin-bottom:6px}
+.copybtn{background:var(--panel2);border:1px solid var(--line);color:var(--gold);border-radius:8px;font-family:'Cairo';font-weight:700;font-size:12px;padding:6px 14px;margin-top:8px;cursor:pointer}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-left:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+
+/* ===== Carousel stage ===== */
+#stage{position:relative;overflow:hidden;width:100%;max-width:400px;margin:14px auto 0;border-radius:6px;background:var(--panel2)}
+#stage .inner{position:relative;overflow:hidden;width:400px;height:500px}
+.frame{width:1080px;height:1350px;transform:scale(0.37037);transform-origin:top left;position:absolute;top:0;left:0}
+.slidebar{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px}
+.slidebar button{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;font-family:'Cairo';font-weight:900;font-size:14px;padding:8px 16px;cursor:pointer}
+.slidebar span{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold)}
+
+/* ===== Slide design (Editorial Code) ===== */
+.slide{width:1080px;height:1350px;position:relative;overflow:hidden;font-family:'Cairo',sans-serif}
+.slide *{letter-spacing:0 !important}
+.slide .content{position:absolute;inset:0;padding:90px 80px 190px;display:flex;flex-direction:column;justify-content:center;text-align:right}
+.slide .ar{word-break:keep-all}
+.s-light{background:#E7E3DD;color:#1A1A22}
+.s-dark{background:#1A1A22;color:#E7E3DD}
+.slide .kick{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:#E85D28;margin-bottom:34px;text-align:right}
+.slide .idx{position:absolute;top:70px;left:80px;font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:#E85D28}
+.slide h1.t{font-weight:900;font-size:92px;line-height:1.35;margin-bottom:40px;text-align:right;word-break:keep-all}
+.slide p.b{font-weight:600;font-size:44px;line-height:2;text-align:right;word-break:keep-all}
+.slide .rule{width:140px;height:10px;background:#E85D28;margin:0 0 44px auto}
+.brandbar{position:absolute;bottom:0;left:0;right:0;height:120px;background:#111117;display:flex;align-items:center;justify-content:flex-end;gap:22px;padding:0 80px}
+.s-light .brandbar{background:#1A1A22}
+.brandbar .pi{width:70px;height:70px;border-radius:50%;border:3px solid #D4A843;background:#22222c;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.brandbar .pi img{width:100%;height:100%;object-fit:cover}
+.brandbar .nm{color:#E7E3DD;font-weight:900;font-size:34px;text-align:right}
+.brandbar .vf{width:34px;height:34px}
+.brandbar .tr{margin-right:auto;color:#D4A843;font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="avatar" id="uiAvatar"><span style="color:var(--gold);font-weight:900">Y</span></div>
+      <div>
+        <h1>مكينة المحتوى</h1>
+        <div class="sub"><b>@y.tyle</b> · ترند العراق · Gemini Edition</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="pill" id="modelPill">gemini</div>
+      <button id="gearBtn" style="background:var(--panel2);border:1px solid var(--line);border-radius:10px;font-size:16px;padding:6px 10px;cursor:pointer">⚙️</button>
+    </div>
+  </header>
+  <div class="statsbar" id="statsBar">⚡ <b id="statTotal">0</b> توليدة · 🏭 <b id="statCar">0</b> كاروسيل · 🎬 <b id="statReel">0</b> ريلز/هوكات · ⭐ <b id="statStar">0</b> ناجحة</div>
+
+  <!-- ===== كاروسيل ===== -->
+  <section class="tab on" id="tab-car">
+    <h2 class="sec">🏭 مكينة الكاروسيل</h2>
+    <p class="hint">الصك الخبر أو الموضوع، والمكينة تولّد كاروسيل كامل بستايل Editorial Code + كابشن جاهز. التصدير PNG بدقة 1080×1350.</p>
+    <textarea id="carInput" placeholder="مثال: OpenAI أطلقت موديل جديد اسمه..."></textarea>
+    <input type="text" id="carCount" placeholder="عدد الشرائح (افتراضي 6)" inputmode="numeric" style="margin-top:10px">
+    <button class="btn" id="carGo">ولّد الكاروسيل ⚡</button>
+    <div class="status" id="carStatus"></div>
+    <div id="carArea" style="display:none">
+      <div id="stage"><div class="inner"><div class="frame" id="frame"></div></div></div>
+      <div class="slidebar">
+        <button id="prevS">‹</button><span id="sNum">1 / 1</span><button id="nextS">›</button>
+      </div>
+      <button class="btn ghost" id="editToggle">✏️ عدّل نص الشريحة</button>
+      <div id="editArea" style="display:none;margin-top:10px">
+        <input type="text" id="editTag" placeholder="الوسم فوك العنوان">
+        <textarea id="editTitle" placeholder="العنوان" style="margin-top:8px;min-height:70px"></textarea>
+        <textarea id="editBody" placeholder="النص" style="margin-top:8px;min-height:90px"></textarea>
+      </div>
+      <button class="btn ghost" id="audCarBtn">🗣️ شنو يكولون الجمهور؟</button>
+      <div id="audCarOut"></div>
+      <button class="btn orange" id="expOne">تصدير هاي الشريحة PNG</button>
+      <button class="btn ghost" id="expAll">تصدير كل الشرائح</button>
+      <div class="card" id="capCard" style="display:none">
+        <div class="tag">CAPTION</div>
+        <div id="capText" style="white-space:pre-wrap"></div>
+        <button class="copybtn" onclick="copyEl('capText')">انسخ الكابشن</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== هوكات ===== -->
+  <section class="tab" id="tab-hook">
+    <h2 class="sec">🎣 مكينة الهوكات والسكربتات</h2>
+    <p class="hint">صيغة الهوك الثابتة: نفي المشهور ← ليش لا ← البديل ← ليش أفضل. كل النتائج باللهجة العراقية البحتة.</p>
+    <textarea id="hookInput" placeholder="شنو موضوع الريل؟ مثال: تطبيق مجاني بديل عن CapCut"></textarea>
+    <button class="btn" id="hookGo">ولّد 5 هوكات + سكربت ⚡</button>
+    <div class="status" id="hookStatus"></div>
+    <div id="hookOut"></div>
+  </section>
+
+  <!-- ===== أخبار ===== -->
+  <section class="tab" id="tab-news">
+    <h2 class="sec">📡 الرادار — أخبار وترندات</h2>
+    <p class="hint">Gemini يبحث بكوكل مباشرة: آخر أخبار النيش أو ترندات اليوم مع فكرة الركوب عليها.</p>
+    <input type="text" id="newsInput" placeholder="النيش (افتراضي: ذكاء اصطناعي وتقنية)">
+    <button class="btn" id="newsGo">جيب آخر الأخبار 📡</button>
+    <button class="btn orange" id="trendGo">🔥 ترندات اليوم + فكرة الركوب</button>
+    <div class="status" id="newsStatus"></div>
+    <div id="newsOut"></div>
+  </section>
+
+  <!-- ===== كابشن ===== -->
+  <section class="tab" id="tab-cap">
+    <h2 class="sec">✍️ مكينة الكابشن</h2>
+    <p class="hint">كابشن انستغرام/تيك توك كامل: هوك أول سطر + قيمة + CTA + هاشتاكات عراقية.</p>
+    <textarea id="capInput" placeholder="شنو موضوع البوست؟"></textarea>
+    <button class="btn" id="capGo">ولّد الكابشن ⚡</button>
+    <div class="status" id="capStatus"></div>
+    <div id="capOut"></div>
+  </section>
+
+  <!-- ===== مصنع الأسبوع ===== -->
+  <section class="tab" id="tab-week">
+    <h2 class="sec">🗓️ مصنع الأسبوع</h2>
+    <p class="hint">زر واحد: المكينة تبحث بآخر أخبار النيش، تختار 7 مواضيع، وتوزعهن على أسبوع كامل — 3 كاروسيلات + 3 ريلز + 1 ستوري، كل واحد بهوكه وكابشنه.</p>
+    <input type="text" id="weekInput" placeholder="النيش (افتراضي: ذكاء اصطناعي وتقنية)">
+    <button class="btn" id="weekGo">خطط لي أسبوع كامل ⚡</button>
+    <div class="status" id="weekStatus"></div>
+    <div id="weekOut"></div>
+    <h2 class="sec" style="margin-top:22px">📈 خطة نمو 30 يوم</h2>
+    <p class="hint">حط هدفك بالمتابعين، تطلعلك خطة 4 أسابيع بالتركيز والخطوات.</p>
+    <input type="text" id="goalInput" placeholder="مثال: من 34K الى 50K متابع">
+    <button class="btn ghost" id="goalGo">ابنيلي خطة النمو ⚡</button>
+    <div class="status" id="goalStatus"></div>
+    <div id="goalOut"></div>
+  </section>
+
+  <!-- ===== الأرشيف ===== -->
+  <section class="tab" id="tab-arc">
+    <h2 class="sec">💾 أرشيف الإنتاج</h2>
+    <p class="hint">كل شي ولّدته محفوظ بجهازك — استرجعه بضغطة. علّم ⭐ على اللي نجح حتى المكينة تتعلم أسلوبك بالتوليدات الجاية. (آخر 60 توليدة)</p>
+    <input type="text" id="arcSearch" placeholder="بحث بالعنوان...">
+    <div class="chipsRow" id="arcChips"></div>
+    <div id="arcList"></div>
+  </section>
+
+  <!-- ===== محلل الهوكات ===== -->
+  <section class="tab" id="tab-hookan">
+    <h2 class="sec">🎯 محلل الهوكات</h2>
+    <p class="hint">الصك أي هوك أو أول جملة سكربت، يقيّمه من 10 حسب صيغتك الرباعية (نفي ← ليش لا ← البديل ← ليش أفضل) ويعطيك نسخة محسّنة.</p>
+    <textarea id="hookanInput" placeholder="الصك الهوك اللي تريد تحلله..."></textarea>
+    <button class="btn" id="hookanGo">حلل الهوك ⚡</button>
+    <div class="status" id="hookanStatus"></div>
+    <div id="hookanOut"></div>
+  </section>
+
+  <!-- ===== تدوير المحتوى ===== -->
+  <section class="tab" id="tab-rep">
+    <h2 class="sec">🔁 تدوير المحتوى</h2>
+    <p class="hint">الصك كابشن أو نص كاروسيل قديم ناجح، يحوّله لريل سكربت + فكرة ستوري + كابشن جديد — محتوى واحد يصير 3 بوستات.</p>
+    <textarea id="repInput" placeholder="الصك النص القديم اللي تريد تدوّره..."></textarea>
+    <button class="btn" id="repGo">دوّر المحتوى ⚡</button>
+    <div class="status" id="repStatus"></div>
+    <div id="repOut"></div>
+  </section>
+
+  <!-- ===== سلسلة محتوى ===== -->
+  <section class="tab" id="tab-series">
+    <h2 class="sec">🧵 سلسلة محتوى</h2>
+    <p class="hint">اعطيه موضوع كبير، يقسمه لحلقات مترابطة — السلاسل تخلي المتابعين ينتظرون الجزء الجاي.</p>
+    <textarea id="seriesInput" placeholder="الموضوع الكبير... مثال: كل شي عن الذكاء الاصطناعي للمبتدئين"></textarea>
+    <input type="text" id="seriesCount" placeholder="عدد الحلقات (افتراضي 6)" inputmode="numeric" style="margin-top:10px">
+    <button class="btn" id="seriesGo">قسّمها لسلسلة ⚡</button>
+    <div class="status" id="seriesStatus"></div>
+    <div id="seriesOut"></div>
+  </section>
+
+  <!-- ===== قصص شخصية ===== -->
+  <section class="tab" id="tab-story">
+    <h2 class="sec">🎭 قصص شخصية</h2>
+    <p class="hint">اكتب موقف صار وياك، يحوّله لريل بأسلوب قصصي مشوّق — المحتوى الشخصي يبني ثقة أكثر من المعلوماتي.</p>
+    <textarea id="storyInput" placeholder="شنو الموقف اللي صار وياك؟"></textarea>
+    <button class="btn" id="storyGo">حوّلها لقصة ⚡</button>
+    <div class="status" id="storyStatus"></div>
+    <div id="storyOut"></div>
+  </section>
+
+  <!-- ===== بنك الأفكار ===== -->
+  <section class="tab" id="tab-ideas">
+    <h2 class="sec">📝 بنك الأفكار</h2>
+    <p class="hint">أي فكرة تخطر ببالك اكتبها بسطر — بأي وقت تحولها لكاروسيل أو ريل جاهز.</p>
+    <input type="text" id="ideaInput" placeholder="اكتب الفكرة بسطر...">
+    <button class="btn" id="ideaAdd">أضف الفكرة +</button>
+    <div id="ideasOut" style="margin-top:6px"></div>
+  </section>
+
+  <!-- ===== إعدادات ===== -->
+  <section class="tab" id="tab-set">
+    <h2 class="sec">⚙️ الإعدادات</h2>
+    <p class="hint">مفتاح Gemini API تجيبه مجاناً من <b>aistudio.google.com</b> ← Get API key. ينحفظ بجهازك فقط، ما يطلع لأي مكان ثاني.</p>
+    <input type="password" id="apiKey" placeholder="AIza...">
+    <select id="modelSel" style="margin-top:10px">
+      <option value="gemini-2.5-flash">gemini-2.5-flash (سريع — الافتراضي)</option>
+      <option value="gemini-2.5-pro">gemini-2.5-pro (أذكى — أبطأ)</option>
+      <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+    </select>
+    <div style="margin-top:14px">
+      <p class="hint" style="margin-bottom:6px">صورة بروفايل @y.tyle (تنحط على كل شريحة):</p>
+      <input type="file" id="pfpFile" accept="image/*" style="color:var(--dim);font-size:12px">
+    </div>
+    <button class="btn" id="saveSet">احفظ الإعدادات ✓</button>
+    <div class="status" id="setStatus"></div>
+  </section>
+</div>
+
+<nav>
+  <button class="on" data-t="car"><span class="ic">🏭</span>كاروسيل</button>
+  <button data-t="week"><span class="ic">🗓️</span>أسبوع</button>
+  <button data-t="hook"><span class="ic">🎣</span>هوكات</button>
+  <button data-t="hookan"><span class="ic">🎯</span>محلل</button>
+  <button data-t="rep"><span class="ic">🔁</span>تدوير</button>
+  <button data-t="series"><span class="ic">🧵</span>سلسلة</button>
+  <button data-t="story"><span class="ic">🎭</span>قصص</button>
+  <button data-t="ideas"><span class="ic">📝</span>أفكار</button>
+  <button data-t="news"><span class="ic">📡</span>رادار</button>
+  <button data-t="cap"><span class="ic">✍️</span>كابشن</button>
+  <button data-t="arc"><span class="ic">💾</span>أرشيف</button>
+</nav>
+<script>
+/* ================= إعدادات ================= */
+const LS = {key:'mk_gemini_key', model:'mk_gemini_model', pfp:'mk_pfp_b64'};
+const $ = id => document.getElementById(id);
+let PFP = localStorage.getItem(LS.pfp) || '';
+
+function loadSet(){
+  $('apiKey').value = localStorage.getItem(LS.key) || '';
+  $('modelSel').value = localStorage.getItem(LS.model) || 'gemini-2.5-flash';
+  $('modelPill').textContent = $('modelSel').value.replace('gemini-','G ');
+  if(PFP) $('uiAvatar').innerHTML = '<img src="'+PFP+'">';
+}
+$('saveSet').onclick = () => {
+  localStorage.setItem(LS.key, $('apiKey').value.trim());
+  localStorage.setItem(LS.model, $('modelSel').value);
+  $('setStatus').textContent = 'انحفظت ✓';
+  loadSet();
+};
+$('pfpFile').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const img = new Image(); const rd = new FileReader();
+  rd.onload = ev => { img.onload = () => {
+    const c = document.createElement('canvas'); c.width = 500; c.height = 500;
+    const x = c.getContext('2d'); const s = Math.min(img.width, img.height);
+    x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,500,500);
+    PFP = c.toDataURL('image/png');
+    localStorage.setItem(LS.pfp, PFP); loadSet();
+    $('setStatus').textContent = 'الصورة انحفظت ✓';
+  }; img.src = ev.target.result; };
+  rd.readAsDataURL(f);
+};
+
+/* تنقل التابات */
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on', x.dataset.t===t));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  $('tab-'+t).classList.add('on');
+  if(t==='arc') renderArc();
+  if(t==='ideas') renderIdeas();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav button').forEach(b=>{ b.onclick=()=>showTab(b.dataset.t); });
+$('gearBtn').onclick = ()=>showTab('set');
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+
+/* ================= قاموس الاستبدال العراقي ================= */
+const DICT = [['وكفها','اوكفها'],['اوريك','اكلك'],['وقف','اوكف'],['تخزن','تحفظ'],['فوضى','هوسه'],['فون','موبايل'],['طلوع','اضهار'],['احسبني','ادعيلي'],['قدام','كدام'],['عشان','علمود']];
+function fixDialect(t){ DICT.forEach(([a,b])=>{ t = t.split(a).join(b); }); return t; }
+
+/* ================= نداء Gemini ================= */
+const SYS = `انت مساعد صانع محتوى عراقي (@y.tyle - ترند العراق - 34K متابع).
+قواعد صارمة لا تُخرق:
+1. كل النصوص باللهجة العراقية البحتة فقط. ممنوع الفصحى وممنوع اللهجات الثانية.
+2. استبدالات الزامية: وكفها→اوكفها | اوريك→اكلك | وقف→اوكف | تخزن→تحفظ | فوضى→هوسه | فون→موبايل | طلوع→اضهار | احسبني→ادعيلي | قدام→كدام | عشان→علمود
+3. صيغة الهوك: (1) نفي شي مشهور (2) ليش ما تستخدمه (3) البديل (4) ليش البديل أفضل.
+4. الاسلوب: مباشر، قصير، بدون حشو، يخاطب الجمهور العراقي.`;
+
+async function gemini(userText, {json=false, search=false} = {}){
+  const key = localStorage.getItem(LS.key);
+  if(!key) throw new Error('NOKEY');
+  const model = localStorage.getItem(LS.model) || 'gemini-2.5-flash';
+  const body = {
+    systemInstruction:{parts:[{text:SYS}]},
+    contents:[{role:'user',parts:[{text:userText}]}],
+    generationConfig:{temperature:0.9}
+  };
+  if(json && !search) body.generationConfig.responseMimeType = 'application/json';
+  if(search) body.tools = [{google_search:{}}];
+  const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',
+    {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+  const d = await r.json();
+  if(d.error) throw new Error(d.error.message || 'API error');
+  const parts = d.candidates?.[0]?.content?.parts || [];
+  return fixDialect(parts.map(p=>p.text||'').join('\n'));
+}
+function parseJSON(t){
+  t = t.replace(/```json|```/g,'').trim();
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  return JSON.parse(t.slice(a, b+1));
+}
+function handleErr(el, e){
+  if(e.message === 'NOKEY'){ el.textContent = '⚠️ روح للإعدادات وحط مفتاح Gemini API أول'; }
+  else el.textContent = '⚠️ صار خطأ: ' + e.message;
+  el.classList.add('err');
+}
+function copyEl(id){ navigator.clipboard.writeText($(id).innerText); }
+const busy = (el,msg)=>{ el.classList.remove('err'); el.innerHTML = msg+'<span class="spin"></span>'; };
+
+/* ================= الكاروسيل ================= */
+let SLIDES = [], CUR = 0;
+const VF = '<svg class="vf" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1D9BF0"/><path d="M7 12.5l3 3 7-7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function brandBar(){
+  const pi = PFP ? '<img src="'+PFP+'">' : '<span style="color:#D4A843;font-weight:900;font-size:36px">Y</span>';
+  return '<div class="brandbar"><div class="tr">TREND IRAQ</div>'+VF+'<div class="nm">@y.tyle</div><div class="pi">'+pi+'</div></div>';
+}
+function slideHTML(s, i, n){
+  const dark = (s.theme==='dark' || i===0 || i===n-1);
+  const cls = dark ? 's-dark' : 's-light';
+  let inner = '<div class="idx">'+String(i+1).padStart(2,'0')+' / '+String(n).padStart(2,'0')+'</div>';
+  inner += '<div class="content"><div class="kick ar">'+(s.tag||'ترند العراق')+'</div><div class="rule"></div>';
+  inner += '<h1 class="t ar">'+s.title+'</h1>';
+  if(s.body) inner += '<p class="b ar">'+s.body+'</p>';
+  inner += '</div>' + brandBar();
+  return '<div class="slide '+cls+'">'+inner+'</div>';
+}
+function showSlide(){
+  const n = SLIDES.length;
+  $('frame').innerHTML = slideHTML(SLIDES[CUR], CUR, n);
+  $('sNum').textContent = (CUR+1)+' / '+n;
+  if($('editArea').style.display==='block') syncEditFields();
+}
+$('prevS').onclick = ()=>{ if(CUR>0){CUR--; showSlide();} };
+$('nextS').onclick = ()=>{ if(CUR<SLIDES.length-1){CUR++; showSlide();} };
+
+function syncEditFields(){
+  $('editTag').value = SLIDES[CUR].tag||''; $('editTitle').value = SLIDES[CUR].title||''; $('editBody').value = SLIDES[CUR].body||'';
+}
+$('editToggle').onclick = ()=>{
+  const open = $('editArea').style.display==='block';
+  if(!open){ syncEditFields(); $('editArea').style.display='block'; $('editToggle').textContent='✓ خلص التعديل'; }
+  else { $('editArea').style.display='none'; $('editToggle').textContent='✏️ عدّل نص الشريحة'; }
+};
+['editTag','editTitle','editBody'].forEach(id=>{
+  $(id).oninput = ()=>{ SLIDES[CUR].tag=$('editTag').value; SLIDES[CUR].title=$('editTitle').value; SLIDES[CUR].body=$('editBody').value; showSlide(); };
+});
+
+$('audCarBtn').onclick = async ()=>{
+  if(!SLIDES.length) return;
+  const el = $('audCarOut'); busy(el,'دا نسولف وياهم...');
+  try{
+    const gist = SLIDES.map(s=>s.title).join(' / ');
+    const txt = await gemini(`تخيل 5 متابعين عراقيين مختلفين (طالب، موظف، صاحب مشروع، ربة بيت، شاب عاطل) شافوا كاروسيل عنوانه: "${gist}". اكتب تعليق قصير واقعي (سطر وحد) لكل واحد منهم شلون بيرد فعل. رجّع كل تعليق بسطر منفصل يبدا بايموجي واسم الشخصية.`);
+    el.innerHTML = '<div class="card"><div class="tag">AUDIENCE SIM</div><div style="white-space:pre-wrap">'+txt+'</div></div>';
+  }catch(e){ handleErr(el,e); }
+};
+
+$('carGo').onclick = async ()=>{
+  const topic = $('carInput').value.trim(); if(!topic) return;
+  const n = parseInt($('carCount').value) || 6;
+  const st = $('carStatus'); busy(st,'دا نولّد الكاروسيل...');
+  try{
+    const raw = await gemini(
+`حوّل هذا الموضوع لكاروسيل انستغرام من ${n} شرائح بستايل تحريري قوي:
+"${topic}"
+
+رجّع JSON فقط بهذا الشكل بالضبط:
+{"slides":[{"tag":"كلمة او كلمتين فوك العنوان","title":"عنوان قصير قوي (اقصى 8 كلمات)","body":"نص الشريحة (سطرين لثلاثة، او فارغ للغلاف)","theme":"dark او light"}],"caption":"كابشن كامل: هوك + قيمة + CTA + هاشتاكات"}
+
+الشريحة الاولى غلاف بعنوان صادم بدون body طويل. الاخيرة CTA (تابع @y.tyle). كل النصوص عراقي بحت.`+styleMemoryLine(), {json:true});
+    const data = parseJSON(raw);
+    SLIDES = data.slides.map(s=>({...s, title:fixDialect(s.title||''), body:fixDialect(s.body||''), tag:fixDialect(s.tag||'')}));
+    CUR = 0; showSlide();
+    $('carArea').style.display = 'block';
+    $('capText').textContent = fixDialect(data.caption||'');
+    $('capCard').style.display = 'block';
+    saveArc('car', SLIDES[0]?.title || topic.slice(0,50), {slides:SLIDES, caption:fixDialect(data.caption||'')});
+    st.textContent = '✓ جاهز — '+SLIDES.length+' شرائح';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* تصدير PNG — clone خارج الـtransform + scale:3 */
+async function exportSlide(i){
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;top:0;left:-99999px;width:1080px;height:1350px';
+  holder.innerHTML = slideHTML(SLIDES[i], i, SLIDES.length);
+  document.body.appendChild(holder);
+  await new Promise(r=>setTimeout(r,250));
+  const canvas = await html2canvas(holder.firstChild, {scale:3, windowWidth:1080, windowHeight:1350, backgroundColor:null, useCORS:true});
+  const a = document.createElement('a');
+  a.download = 'ytyle-slide-'+String(i+1).padStart(2,'0')+'.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  holder.remove();
+}
+$('expOne').onclick = async ()=>{
+  const st = $('carStatus'); busy(st,'دا نصدّر...');
+  const f = $('frame'); const old = f.style.transform; f.style.transform = 'none';
+  try{ await exportSlide(CUR); st.textContent='✓ نزلت'; }
+  catch(e){ handleErr(st,e); }
+  f.style.transform = old;
+};
+$('expAll').onclick = async ()=>{
+  const st = $('carStatus');
+  const f = $('frame'); const old = f.style.transform; f.style.transform = 'none';
+  try{
+    for(let i=0;i<SLIDES.length;i++){
+      busy(st,'شريحة '+(i+1)+' من '+SLIDES.length+'...');
+      await exportSlide(i);
+      await new Promise(r=>setTimeout(r,500));
+    }
+    st.textContent = '✓ كلهن نزلن';
+  }catch(e){ handleErr(st,e); }
+  f.style.transform = old;
+};
+
+/* ================= الهوكات ================= */
+$('hookGo').onclick = async ()=>{
+  const t = $('hookInput').value.trim(); if(!t) return;
+  const st = $('hookStatus'); busy(st,'دا نولّد الهوكات...');
+  try{
+    const raw = await gemini(
+`الموضوع: "${t}"
+ولّد JSON فقط:
+{"hooks":["5 هوكات مختلفة، كل واحد بصيغة الاربع خطوات مدموجة بجملة او جملتين"],
+"script":[{"phase":"هوك او محتوى او CTA","sec":"مثال 0-3","text":"النص الصوتي","shot":"وصف قصير للقطة المقترحة (زاوية، حركة، عنصر بالشاشة)"}],
+"thumbTexts":["3 اقتراحات نص ثمبنيل صادم، 3-5 كلمات لكل وحدة"]}
+السكربت لريل 30-45 ثانية بثلاث مراحل: هوك (0-3s)، محتوى (3-15s تقريباً)، CTA (15-25s تقريباً) — ممكن تقسم المحتوى لأكثر من مشهد. كله عراقي بحت.`+styleMemoryLine(), {json:true});
+    const d = parseJSON(raw);
+    let h = '';
+    (d.hooks||[]).forEach((x,i)=>{ h += '<div class="card"><div class="tag">HOOK '+(i+1)+'</div><div id="hk'+i+'">'+fixDialect(x)+'</div><button class="copybtn" onclick="copyEl(\'hk'+i+'\')">انسخ</button></div>'; });
+    h += '<div class="card"><div class="tag">SCRIPT — سكربت الريل بالثواني</div>';
+    (d.script||[]).forEach(s=>{ h += '<div style="border-right:3px solid var(--accent);padding-right:10px;margin:12px 0"><b style="color:var(--gold)">'+fixDialect(s.phase||'')+'</b> <span style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--dim)">'+(s.sec||'')+'s</span><br>'+fixDialect(s.text||'')+(s.shot?'<div style="margin-top:4px;color:var(--dim);font-size:12px">🎥 '+fixDialect(s.shot)+'</div>':'')+'</div>'; });
+    h += '</div>';
+    if((d.thumbTexts||[]).length){
+      h += '<div class="card"><div class="tag">💡 نص الثمبنيل</div>';
+      d.thumbTexts.forEach(tt=>{ h += '<button class="copybtn" style="display:block;width:100%;text-align:right;margin-top:6px" onclick="makeThumb(\''+fixDialect(tt).replace(/'/g,"\\'")+'\')">🖼️ '+fixDialect(tt)+'</button>'; });
+      h += '</div>';
+    }
+    h += '<button class="btn ghost" onclick="makeThumb($(\'hookInput\').value.trim())">🖼️ ثمبنيل بعنوان الموضوع</button>';
+    h += '<button class="btn ghost" id="audHookBtn">🗣️ شنو يكولون الجمهور؟</button><div id="audHookOut"></div>';
+    $('hookOut').innerHTML = h;
+    $('audHookBtn').onclick = async ()=>{
+      const el = $('audHookOut'); busy(el,'دا نسولف وياهم...');
+      try{
+        const txt = await gemini(`تخيل 5 متابعين عراقيين مختلفين شافوا ريل عنوانه: "${t}". اكتب تعليق قصير واقعي لكل واحد، سطر وحد يبدا بايموجي واسم الشخصية.`);
+        el.innerHTML = '<div class="card"><div class="tag">AUDIENCE SIM</div><div style="white-space:pre-wrap">'+txt+'</div></div>';
+      }catch(e){ handleErr(el,e); }
+    };
+    saveArc('hook', t.slice(0,50), {html:h});
+    st.textContent = '✓ جاهز';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= الأخبار (Google Search grounding) ================= */
+$('newsGo').onclick = async ()=>{
+  const niche = $('newsInput').value.trim() || 'الذكاء الاصطناعي والتقنية';
+  const st = $('newsStatus'); busy(st,'دا ندوّر بكوكل...');
+  try{
+    const raw = await gemini(
+`دوّر بالبحث عن اهم 6 اخبار من آخر ايام بمجال: ${niche}.
+بعد البحث، رجّع النتيجة بهذا الشكل بالضبط (بدون اي شي قبل او بعد):
+لكل خبر:
+###
+العنوان: (عنوان عراقي جذاب)
+الخبر: (سطرين شرح بالعراقي)
+الزاوية: (شلون يتحول لريل او كاروسيل لجمهور @y.tyle)`, {search:true});
+    const items = raw.split('###').map(x=>x.trim()).filter(x=>x.length>20);
+    let h = '';
+    items.forEach((x,i)=>{
+      const g = k => (x.match(new RegExp(k+':\\s*([^\\n]+(?:\\n(?!\\S+:)[^\\n]+)*)')) || [,''])[1].trim();
+      h += '<div class="card"><div class="tag">NEWS '+(i+1)+'</div><h3>'+ (g('العنوان')||'خبر') +'</h3><div>'+g('الخبر')+'</div><div style="margin-top:8px;color:var(--gold);font-size:13px">🎬 '+g('الزاوية')+'</div><button class="copybtn" onclick="sendToCar(this)">حوّله كاروسيل ←</button></div>';
+    });
+    $('newsOut').innerHTML = h || '<div class="card">ما لكينا نتائج واضحة، جرّب نيش ثاني.</div>';
+    if(h) saveArc('news', 'أخبار — '+niche, {html:h});
+    st.textContent = '✓ جاهز';
+  }catch(e){ handleErr(st,e); }
+};
+function sendToCar(btn){
+  const card = btn.closest('.card');
+  $('carInput').value = card.querySelector('h3').innerText + ' — ' + card.querySelectorAll('div')[1].innerText;
+  document.querySelector('nav button[data-t=car]').click();
+}
+async function quickTrendScript(btn){
+  const card = btn.closest('.card');
+  const topic = card.querySelector('h3').innerText;
+  const out = card.querySelector('.qtOut');
+  busy(out, 'دا نولّد بسرعة...');
+  try{
+    const txt = await gemini(`الموضوع: "${topic}". اكتب هوك واحد قوي بصيغة الاربع خطوات (نفي ← ليش لا ← البديل ← ليش افضل)، وتحته سكربت ريل مختصر 3 اسطر (هوك/محتوى/CTA). عراقي بحت.`+styleMemoryLine());
+    out.innerHTML = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);white-space:pre-wrap">'+txt+'</div>';
+    saveArc('hook', topic.slice(0,50)+' (سريع)', {html:'<div class="card"><div class="tag">QUICK</div><div style="white-space:pre-wrap">'+txt+'</div></div>'});
+  }catch(e){ handleErr(out,e); }
+}
+
+/* ================= الكابشن ================= */
+$('capGo').onclick = async ()=>{
+  const t = $('capInput').value.trim(); if(!t) return;
+  const st = $('capStatus'); busy(st,'دا نكتب...');
+  try{
+    const txt = await gemini(`اكتب كابشن انستغرام كامل لبوست عن: "${t}". الهيكل: هوك اول سطر يوكّف السكرول + 3-4 اسطر قيمة + CTA (تابع @y.tyle) + 8 هاشتاكات عراقية وتقنية. عراقي بحت، بدون مقدمات.`);
+    $('capOut').innerHTML = '<div class="card"><div class="tag">CAPTION</div><div id="capR" style="white-space:pre-wrap">'+txt+'</div><button class="copybtn" onclick="copyEl(\'capR\')">انسخ</button></div>';
+    saveArc('cap', t.slice(0,50), {html:$('capOut').innerHTML});
+    st.textContent = '✓ جاهز';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= الأرشيف ================= */
+const ARCK = 'mk_archive';
+function getArc(){ try{ return JSON.parse(localStorage.getItem(ARCK)||'[]'); }catch(e){ return []; } }
+function saveArc(type, title, data){
+  const a = getArc();
+  a.unshift({id:Date.now(), ts:new Date().toLocaleString('ar-IQ',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}), type, title, data, success:false});
+  localStorage.setItem(ARCK, JSON.stringify(a.slice(0,60)));
+  updateStats();
+}
+const ARCICON = {car:'🏭', hook:'🎣', news:'📡', trend:'🔥', cap:'✍️', week:'🗓️', hookan:'🎯', rep:'🔁', series:'🧵', story:'🎭'};
+const ARCLABEL = {car:'كاروسيل', hook:'هوكات', news:'أخبار', trend:'ترند', cap:'كابشن', week:'أسبوع', hookan:'محلل', rep:'تدوير', series:'سلسلة', story:'قصص'};
+let ARCFILTER = 'all', ARCQ = '';
+function renderChips(){
+  const types = ['all', ...Object.keys(ARCLABEL)];
+  $('arcChips').innerHTML = types.map(t=>
+    '<button class="chip'+(ARCFILTER===t?' on':'')+'" onclick="setArcFilter(\''+t+'\')">'+(t==='all'?'الكل':(ARCICON[t]||'')+' '+ARCLABEL[t])+'</button>'
+  ).join('');
+}
+function setArcFilter(t){ ARCFILTER = t; renderChips(); renderArc(); }
+function renderArc(){
+  renderChips();
+  let a = getArc();
+  if(ARCFILTER!=='all') a = a.filter(x=>x.type===ARCFILTER);
+  if(ARCQ) a = a.filter(x=>(x.title||'').includes(ARCQ));
+  if(!a.length){ $('arcList').innerHTML = '<div class="card">ما لكينا نتائج — جرّب فلتر ثاني أو ولّد شي جديد 👌</div>'; return; }
+  $('arcList').innerHTML = a.map(x=>
+    '<div class="card"><div class="tag">'+(ARCICON[x.type]||'📦')+' '+x.ts+'</div>'
+    +'<button class="starbtn" onclick="toggleSuccess('+x.id+')" title="علّمها ناجحة">'+(x.success?'⭐':'☆')+'</button> '
+    +'<h3 style="display:inline">'+x.title+'</h3>'
+    +'<div style="margin-top:8px"><button class="copybtn" onclick="restoreArc('+x.id+')">استرجاع ←</button> '
+    +'<button class="copybtn" style="color:#ff7a6b" onclick="delArc('+x.id+')">حذف</button></div></div>'
+  ).join('');
+}
+$('arcSearch').oninput = e => { ARCQ = e.target.value.trim(); renderArc(); };
+function delArc(id){ localStorage.setItem(ARCK, JSON.stringify(getArc().filter(x=>x.id!==id))); renderArc(); updateStats(); }
+function toggleSuccess(id){
+  const a = getArc(); const it = a.find(i=>i.id===id); if(!it) return;
+  it.success = !it.success; localStorage.setItem(ARCK, JSON.stringify(a)); renderArc(); updateStats();
+}
+function getSuccessExamples(){
+  return getArc().filter(x=>x.success).slice(0,3).map(x=>x.title);
+}
+function styleMemoryLine(){
+  const ex = getSuccessExamples();
+  if(!ex.length) return '';
+  return '\n\nأمثلة سابقة نجحت وياك (خذ نفس روحية الأسلوب بدون نسخ): '+ex.map(t=>'"'+t+'"').join(' / ');
+}
+function updateStats(){
+  const a = getArc();
+  $('statTotal').textContent = a.length;
+  $('statCar').textContent = a.filter(x=>x.type==='car').length;
+  $('statReel').textContent = a.filter(x=>x.type==='hook'||x.type==='rep'||x.type==='series'||x.type==='story').length;
+  $('statStar').textContent = a.filter(x=>x.success).length;
+}
+function restoreArc(id){
+  const x = getArc().find(i=>i.id===id); if(!x) return;
+  if(x.type==='car'){
+    SLIDES = x.data.slides; CUR = 0; showSlide();
+    $('carArea').style.display='block'; $('capText').textContent = x.data.caption||''; $('capCard').style.display='block';
+    showTab('car');
+  } else if(x.type==='week'){ WEEKPLAN = x.data.plan; renderWeek(); showTab('week'); }
+  else {
+    const target = {hook:'hookOut', news:'newsOut', trend:'newsOut', cap:'capOut', hookan:'hookanOut', rep:'repOut', series:'seriesOut', story:'storyOut'}[x.type];
+    const tab = {trend:'news', hookan:'hookan', rep:'rep', series:'series', story:'story'}[x.type] || x.type;
+    $(target).innerHTML = x.data.html; showTab(tab);
+  }
+}
+
+/* ================= مولد الثمبنيل (Canvas 2D) ================= */
+function wrapCanvasText(ctx, text, maxW){
+  const words = text.split(' '), lines = []; let line = '';
+  words.forEach(w=>{
+    const t = line ? line+' '+w : w;
+    if(ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t;
+  });
+  if(line) lines.push(line);
+  return lines;
+}
+async function makeThumb(title){
+  await document.fonts.ready;
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1920;
+  const x = c.getContext('2d');
+  x.fillStyle = '#1A1A22'; x.fillRect(0,0,1080,1920);
+  x.direction = 'rtl'; x.textAlign = 'right';
+  x.fillStyle = '#E85D28'; x.font = '700 44px Cairo'; x.fillText('ترند العراق', 990, 300);
+  x.fillRect(830, 340, 160, 14);
+  x.fillStyle = '#E7E3DD'; x.font = '900 108px Cairo';
+  const lines = wrapCanvasText(x, title, 880); let y = 520;
+  lines.slice(0,6).forEach(l=>{ x.fillText(l, 990, y); y += 150; });
+  x.fillStyle = '#D4A843'; x.font = '700 46px Cairo'; x.fillText('شاهد للنهاية 👇', 990, y+40);
+  /* براند بار صلب */
+  x.fillStyle = '#111117'; x.fillRect(0, 1720, 1080, 200);
+  if(PFP){
+    const img = new Image(); img.src = PFP;
+    await new Promise(r=>{ img.onload = r; img.onerror = r; });
+    x.save(); x.beginPath(); x.arc(970, 1820, 55, 0, 7); x.clip(); x.drawImage(img, 915, 1765, 110, 110); x.restore();
+    x.strokeStyle = '#D4A843'; x.lineWidth = 5; x.beginPath(); x.arc(970, 1820, 55, 0, 7); x.stroke();
+  } else { x.strokeStyle = '#D4A843'; x.lineWidth = 5; x.beginPath(); x.arc(970, 1820, 55, 0, 7); x.stroke(); }
+  x.fillStyle = '#E7E3DD'; x.font = '900 56px Cairo'; x.fillText('@y.tyle', 890, 1840);
+  x.fillStyle = '#1D9BF0'; x.beginPath(); x.arc(600, 1820, 26, 0, 7); x.fill();
+  x.strokeStyle = '#fff'; x.lineWidth = 6; x.beginPath(); x.moveTo(586,1820); x.lineTo(597,1832); x.lineTo(616,1808); x.stroke();
+  x.fillStyle = '#D4A843'; x.font = '700 34px Cairo'; x.textAlign = 'left'; x.fillText('TREND IRAQ', 80, 1832);
+  const a = document.createElement('a');
+  a.download = 'ytyle-thumb.png'; a.href = c.toDataURL('image/png'); a.click();
+}
+
+/* ================= مصنع الأسبوع ================= */
+let WEEKPLAN = [];
+const WTYPE = {carousel:['🏭','كاروسيل'], reel:['🎬','ريل'], story:['📱','ستوري']};
+function renderWeek(){
+  $('weekOut').innerHTML = WEEKPLAN.map((d,i)=>{
+    const [ic,nm] = WTYPE[d.type] || ['📌', d.type];
+    let btns = '';
+    if(d.type==='carousel') btns = '<button class="copybtn" onclick="weekToCar('+i+')">🏭 ولّده كاروسيل ←</button>';
+    if(d.type==='reel') btns = '<button class="copybtn" onclick="weekToHook('+i+')">🎣 ولّد السكربت ←</button> <button class="copybtn" onclick="makeThumb(WEEKPLAN['+i+'].topic)">🖼️ ثمبنيل</button>';
+    return '<div class="card"><div class="tag">'+d.day+' — '+ic+' '+nm+'</div><h3>'+d.topic+'</h3>'
+      +'<div><b style="color:var(--gold)">الهوك:</b> '+d.hook+'</div>'
+      +'<div style="margin-top:6px;color:var(--dim);font-size:13px">✍️ '+d.caption+'</div>'
+      +(d.storyIdea?'<div style="margin-top:6px;color:var(--accent);font-size:13px">🔔 ستوري: '+d.storyIdea+'</div>':'')
+      +'<div style="margin-top:8px">'+btns+'</div></div>';
+  }).join('');
+}
+function weekToCar(i){ $('carInput').value = WEEKPLAN[i].topic + ' — ' + WEEKPLAN[i].hook; showTab('car'); }
+function weekToHook(i){ $('hookInput').value = WEEKPLAN[i].topic; showTab('hook'); }
+$('weekGo').onclick = async ()=>{
+  const niche = $('weekInput').value.trim() || 'الذكاء الاصطناعي والتقنية';
+  const st = $('weekStatus'); busy(st,'دا نبحث ونخطط الأسبوع... (ياخذ شوي)');
+  try{
+    const raw = await gemini(
+`دوّر بالبحث عن اهم واحدث اخبار وترندات مجال: ${niche}.
+بعدها اختار 7 مواضيع قوية ووزعهن على اسبوع كامل: 3 كاروسيلات + 3 ريلز + 1 ستوري.
+رجّع JSON فقط بدون اي نص قبله او بعده:
+{"plan":[{"day":"السبت","type":"carousel او reel او story","topic":"الموضوع بجملة","hook":"هوك بصيغة: نفي مشهور، ليش لا، البديل، ليش افضل","caption":"سطر كابشن","storyIdea":"اقتراح ستوري تفاعلي ليذاك اليوم (سؤال او استفتاء او سلايدر)"}]}
+كله باللهجة العراقية البحتة.`, {search:true});
+    const d = parseJSON(raw);
+    WEEKPLAN = (d.plan||[]).map(p=>({...p, topic:fixDialect(p.topic||''), hook:fixDialect(p.hook||''), caption:fixDialect(p.caption||''), storyIdea:fixDialect(p.storyIdea||'')}));
+    renderWeek();
+    saveArc('week', 'خطة أسبوع — '+niche, {plan:WEEKPLAN});
+    st.textContent = '✓ خطة '+WEEKPLAN.length+' أيام جاهزة';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= الترندات ================= */
+$('trendGo').onclick = async ()=>{
+  const niche = $('newsInput').value.trim() || 'العراق والتقنية والسوشيال ميديا';
+  const st = $('newsStatus'); busy(st,'دا نصطاد الترندات...');
+  try{
+    const raw = await gemini(
+`دوّر بالبحث عن اهم 5 ترندات رائجة هسه (آخر ايام) بمجال: ${niche}.
+رجّع النتيجة بهذا الشكل بالضبط، لكل ترند:
+###
+العنوان: (اسم الترند بالعراقي)
+الخبر: (ليش رائج هسه، سطرين)
+الزاوية: (شلون @y.tyle يركب عليه اليوم بمحتوى بنفس النيش)`, {search:true});
+    const items = raw.split('###').map(x=>x.trim()).filter(x=>x.length>20);
+    let h = '';
+    items.forEach((x,i)=>{
+      const g = k => (x.match(new RegExp(k+':\\s*([^\\n]+(?:\\n(?!\\S+:)[^\\n]+)*)')) || [,''])[1].trim();
+      h += '<div class="card"><div class="tag">🔥 TREND '+(i+1)+'</div><h3>'+(g('العنوان')||'ترند')+'</h3><div>'+g('الخبر')+'</div><div style="margin-top:8px;color:var(--gold);font-size:13px">🎬 '+g('الزاوية')+'</div><button class="copybtn" onclick="sendToCar(this)">حوّله كاروسيل ←</button> <button class="copybtn" style="color:var(--accent)" onclick="quickTrendScript(this)">⚡ سكربت سريع</button><div class="qtOut"></div></div>';
+    });
+    $('newsOut').innerHTML = h || '<div class="card">ما لكينا ترندات واضحة، جرّب نيش ثاني.</div>';
+    saveArc('trend', 'ترندات — '+niche, {html:$('newsOut').innerHTML});
+    st.textContent = '✓ جاهز';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= خطة نمو 30 يوم ================= */
+$('goalGo').onclick = async ()=>{
+  const goal = $('goalInput').value.trim(); if(!goal) return;
+  const st = $('goalStatus'); busy(st,'دا نبني الخطة...');
+  try{
+    const raw = await gemini(`هدف صانع محتوى عراقي (@y.tyle، 34K متابع): "${goal}". ابنيلة خطة نمو 4 اسابيع.
+رجّع JSON فقط: {"weeks":[{"week":1,"focus":"تركيز الاسبوع بجملة","actions":["3-4 خطوات عملية يومية/اسبوعية"]}]}
+عراقي بحت، خطوات عملية قابلة للتنفيذ من موبايل.`, {json:true});
+    const d = parseJSON(raw);
+    let h = '';
+    (d.weeks||[]).forEach(w=>{
+      h += '<div class="card"><div class="tag">اسبوع '+w.week+'</div><h3>'+fixDialect(w.focus||'')+'</h3><ul style="margin-right:18px">';
+      (w.actions||[]).forEach(a=>{ h += '<li style="margin-top:6px">'+fixDialect(a)+'</li>'; });
+      h += '</ul></div>';
+    });
+    $('goalOut').innerHTML = h;
+    saveArc('week', 'خطة نمو — '+goal.slice(0,40), {plan:WEEKPLAN, html:h});
+    st.textContent = '✓ جاهزة';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= محلل الهوكات ================= */
+$('hookanGo').onclick = async ()=>{
+  const t = $('hookanInput').value.trim(); if(!t) return;
+  const st = $('hookanStatus'); busy(st,'دا نحلل...');
+  try{
+    const raw = await gemini(`حلل هذا الهوك: "${t}"
+حسب صيغة: (1) نفي شي مشهور (2) ليش لا (3) البديل (4) ليش افضل.
+رجّع JSON فقط: {"score":رقم من 10,"why":"سطرين ليش هالتقييم، شنو ناقصه","improved":"نسخة محسّنة من نفس الهوك"}`, {json:true});
+    const d = parseJSON(raw);
+    const h = '<div class="card"><div class="tag">التقييم</div><h3 style="font-size:30px;color:var(--gold)">'+d.score+' / 10</h3>'
+      +'<div style="margin-top:8px">'+fixDialect(d.why||'')+'</div></div>'
+      +'<div class="card"><div class="tag">النسخة المحسّنة</div><div id="hookanImp">'+fixDialect(d.improved||'')+'</div><button class="copybtn" onclick="copyEl(\'hookanImp\')">انسخ</button></div>';
+    $('hookanOut').innerHTML = h;
+    saveArc('hookan', t.slice(0,50), {html:h});
+    st.textContent = '✓ جاهز';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= تدوير المحتوى ================= */
+$('repGo').onclick = async ()=>{
+  const t = $('repInput').value.trim(); if(!t) return;
+  const st = $('repStatus'); busy(st,'دا ندوّر المحتوى...');
+  try{
+    const raw = await gemini(`هذا محتوى قديم ناجح: "${t}"
+حوّله لثلاث صيغ جديدة بدون تكرار حرفي. رجّع JSON فقط:
+{"reelScript":"سكربت ريل قصير 30 ثانية (هوك/محتوى/CTA)","storyIdea":"فكرة ستوري تفاعلي بنفس الموضوع","caption":"كابشن جديد بزاوية مختلفة"}
+عراقي بحت.`+styleMemoryLine(), {json:true});
+    const d = parseJSON(raw);
+    const h = '<div class="card"><div class="tag">🎬 سكربت ريل</div><div id="repR">'+fixDialect(d.reelScript||'')+'</div><button class="copybtn" onclick="copyEl(\'repR\')">انسخ</button></div>'
+      +'<div class="card"><div class="tag">🔔 فكرة ستوري</div><div id="repS">'+fixDialect(d.storyIdea||'')+'</div><button class="copybtn" onclick="copyEl(\'repS\')">انسخ</button></div>'
+      +'<div class="card"><div class="tag">✍️ كابشن جديد</div><div id="repC">'+fixDialect(d.caption||'')+'</div><button class="copybtn" onclick="copyEl(\'repC\')">انسخ</button></div>';
+    $('repOut').innerHTML = h;
+    saveArc('rep', t.slice(0,50), {html:h});
+    st.textContent = '✓ جاهز';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= سلسلة محتوى ================= */
+$('seriesGo').onclick = async ()=>{
+  const t = $('seriesInput').value.trim(); if(!t) return;
+  const n = parseInt($('seriesCount').value) || 6;
+  const st = $('seriesStatus'); busy(st,'دا نقسم السلسلة...');
+  try{
+    const raw = await gemini(`قسّم هذا الموضوع لسلسلة محتوى من ${n} حلقات مترابطة تخلي المتابع ينتظر الجزء الجاي: "${t}"
+رجّع JSON فقط: {"episodes":[{"n":1,"title":"عنوان الحلقة","hook":"هوك قصير يربطها بالسلسلة (مثال: الجزء 1 من...)","summary":"سطرين شنو تحتوي"}]}
+عراقي بحت.`+styleMemoryLine(), {json:true});
+    const d = parseJSON(raw);
+    let h = '';
+    (d.episodes||[]).forEach(ep=>{
+      h += '<div class="card"><div class="tag">حلقة '+ep.n+' / '+n+'</div><h3>'+fixDialect(ep.title||'')+'</h3>'
+        +'<div><b style="color:var(--gold)">الهوك:</b> '+fixDialect(ep.hook||'')+'</div>'
+        +'<div style="margin-top:6px;color:var(--dim);font-size:13px">'+fixDialect(ep.summary||'')+'</div></div>';
+    });
+    $('seriesOut').innerHTML = h;
+    saveArc('series', t.slice(0,50)+' (سلسلة '+n+')', {html:h});
+    st.textContent = '✓ جاهزة — '+(d.episodes||[]).length+' حلقات';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= قصص شخصية ================= */
+$('storyGo').onclick = async ()=>{
+  const t = $('storyInput').value.trim(); if(!t) return;
+  const st = $('storyStatus'); busy(st,'دا نحول الموقف لقصة...');
+  try{
+    const raw = await gemini(`هذا موقف صار مع صانع محتوى: "${t}"
+حوّله لريل بأسلوب قصصي شخصي مشوّق يبني ثقة مع الجمهور. رجّع JSON فقط:
+{"hook":"هوك يفتح القصة بفضول","script":["3-5 اسطر تسرد القصة بالترتيب"],"caption":"كابشن يلخص العبرة + CTA"}
+عراقي بحت، أسلوب شخصي دافئ مو رسمي.`+styleMemoryLine(), {json:true});
+    const d = parseJSON(raw);
+    const h = '<div class="card"><div class="tag">الهوك</div><div id="stH">'+fixDialect(d.hook||'')+'</div><button class="copybtn" onclick="copyEl(\'stH\')">انسخ</button></div>'
+      +'<div class="card"><div class="tag">القصة</div>'+(d.script||[]).map(l=>'<div style="margin-top:8px">'+fixDialect(l)+'</div>').join('')+'</div>'
+      +'<div class="card"><div class="tag">الكابشن</div><div id="stC">'+fixDialect(d.caption||'')+'</div><button class="copybtn" onclick="copyEl(\'stC\')">انسخ</button></div>';
+    $('storyOut').innerHTML = h;
+    saveArc('story', t.slice(0,50), {html:h});
+    st.textContent = '✓ جاهزة';
+  }catch(e){ handleErr(st,e); }
+};
+
+/* ================= بنك الأفكار ================= */
+const IDK = 'mk_ideas';
+function getIdeas(){ try{ return JSON.parse(localStorage.getItem(IDK)||'[]'); }catch(e){ return []; } }
+function renderIdeas(){
+  const a = getIdeas();
+  if(!a.length){ $('ideasOut').innerHTML = '<div class="card">بعدك ما ضفت افكار — اول فكرة تنكتب هنا 👌</div>'; return; }
+  $('ideasOut').innerHTML = a.map(x=>
+    '<div class="card ideaCard"><div>'+x.text+'</div><div style="display:flex;gap:6px;flex:none">'
+    +'<button class="copybtn" onclick="ideaToCar('+x.id+')">🏭</button>'
+    +'<button class="copybtn" onclick="ideaToHook('+x.id+')">🎬</button>'
+    +'<button class="copybtn" style="color:#ff7a6b" onclick="delIdea('+x.id+')">🗑️</button></div></div>'
+  ).join('');
+}
+$('ideaAdd').onclick = ()=>{
+  const t = $('ideaInput').value.trim(); if(!t) return;
+  const a = getIdeas(); a.unshift({id:Date.now(), text:t});
+  localStorage.setItem(IDK, JSON.stringify(a));
+  $('ideaInput').value=''; renderIdeas();
+};
+function delIdea(id){ localStorage.setItem(IDK, JSON.stringify(getIdeas().filter(x=>x.id!==id))); renderIdeas(); }
+function ideaToCar(id){ const it = getIdeas().find(x=>x.id===id); if(!it) return; $('carInput').value = it.text; showTab('car'); }
+function ideaToHook(id){ const it = getIdeas().find(x=>x.id===id); if(!it) return; $('hookInput').value = it.text; showTab('hook'); }
+
+updateStats();
+loadSet();
+</script>
+</body>
+</html>
