@@ -370,7 +370,14 @@ if('serviceWorker' in navigator){
 
 /* ================= قاموس الاستبدال العراقي ================= */
 const DICT = [['وكفها','اوكفها'],['اوريك','اكلك'],['وقف','اوكف'],['تخزن','تحفظ'],['فوضى','هوسه'],['فون','موبايل'],['طلوع','اضهار'],['احسبني','ادعيلي'],['قدام','كدام'],['عشان','علمود']];
-function fixDialect(t){ DICT.forEach(([a,b])=>{ t = t.split(a).join(b); }); return t; }
+function fixDialect(t){
+  DICT.forEach(([a,b])=>{
+    const w = a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const re = new RegExp('(?:(?<![\\p{L}\\p{N}])|(?<=(?:^|[^\\p{L}\\p{N}])ال))'+w+'(?![\\p{L}\\p{N}])', 'gu');
+    t = t.replace(re, b);
+  });
+  return t;
+}
 
 /* ================= نداء Gemini ================= */
 const SYS = `انت مساعد صانع محتوى عراقي (@y.tyle - ترند العراق - 34K متابع).
@@ -413,6 +420,7 @@ const busy = (el,msg)=>{ el.classList.remove('err'); el.innerHTML = msg+'<span c
 
 /* ================= الكاروسيل ================= */
 let SLIDES = [], CUR = 0;
+let THUMBTEXTS = [];
 const VF = '<svg class="vf" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1D9BF0"/><path d="M7 12.5l3 3 7-7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function brandBar(){
@@ -500,14 +508,11 @@ async function exportSlide(i){
 }
 $('expOne').onclick = async ()=>{
   const st = $('carStatus'); busy(st,'دا نصدّر...');
-  const f = $('frame'); const old = f.style.transform; f.style.transform = 'none';
   try{ await exportSlide(CUR); st.textContent='✓ نزلت'; }
   catch(e){ handleErr(st,e); }
-  f.style.transform = old;
 };
 $('expAll').onclick = async ()=>{
   const st = $('carStatus');
-  const f = $('frame'); const old = f.style.transform; f.style.transform = 'none';
   try{
     for(let i=0;i<SLIDES.length;i++){
       busy(st,'شريحة '+(i+1)+' من '+SLIDES.length+'...');
@@ -516,7 +521,6 @@ $('expAll').onclick = async ()=>{
     }
     st.textContent = '✓ كلهن نزلن';
   }catch(e){ handleErr(st,e); }
-  f.style.transform = old;
 };
 
 /* ================= الهوكات ================= */
@@ -538,8 +542,9 @@ $('hookGo').onclick = async ()=>{
     (d.script||[]).forEach(s=>{ h += '<div style="border-right:3px solid var(--accent);padding-right:10px;margin:12px 0"><b style="color:var(--gold)">'+esc(fixDialect(s.phase||''))+'</b> <span style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--dim)">'+esc(s.sec||'')+'s</span><br>'+esc(fixDialect(s.text||''))+(s.shot?'<div style="margin-top:4px;color:var(--dim);font-size:12px">🎥 '+esc(fixDialect(s.shot))+'</div>':'')+'</div>'; });
     h += '</div>';
     if((d.thumbTexts||[]).length){
+      THUMBTEXTS = d.thumbTexts.map(tt=>fixDialect(tt));
       h += '<div class="card"><div class="tag">💡 نص الثمبنيل</div>';
-      d.thumbTexts.forEach(tt=>{ h += '<button class="copybtn" style="display:block;width:100%;text-align:right;margin-top:6px" onclick="makeThumb(\''+fixDialect(tt).replace(/'/g,"\\'")+'\')">🖼️ '+esc(fixDialect(tt))+'</button>'; });
+      THUMBTEXTS.forEach((tt,ti)=>{ h += '<button class="copybtn" style="display:block;width:100%;text-align:right;margin-top:6px" onclick="makeThumb(THUMBTEXTS['+ti+'])">🖼️ '+esc(tt)+'</button>'; });
       h += '</div>';
     }
     h += '<button class="btn ghost" onclick="makeThumb($(\'hookInput\').value.trim())">🖼️ ثمبنيل بعنوان الموضوع</button>';
