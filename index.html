@@ -289,6 +289,14 @@ textarea:focus,input:focus{border-color:var(--gold)}
     </div>
     <button class="btn" id="saveSet">احفظ الإعدادات ✓</button>
     <div class="status" id="setStatus"></div>
+    <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+      <h2 class="sec">💾 نسخة احتياطية</h2>
+      <p class="hint">صدّر الأرشيف وبنك الأفكار كملف واحد تحفظه بجهازك، واستوردهم بأي وقت (حتى بجهاز ثاني) بدون ما تضيع أي شي.</p>
+      <button class="btn ghost" id="backupExport">⬇️ صدّر نسخة احتياطية</button>
+      <input type="file" id="backupFile" accept="application/json" style="display:none">
+      <button class="btn ghost" id="backupImport">⬆️ استورد نسخة احتياطية</button>
+      <div class="status" id="backupStatus"></div>
+    </div>
   </section>
 </div>
 
@@ -899,6 +907,60 @@ $('ideaAdd').onclick = ()=>{
 function delIdea(id){ localStorage.setItem(IDK, JSON.stringify(getIdeas().filter(x=>x.id!==id))); renderIdeas(); }
 function ideaToCar(id){ const it = getIdeas().find(x=>x.id===id); if(!it) return; $('carInput').value = it.text; showTab('car'); }
 function ideaToHook(id){ const it = getIdeas().find(x=>x.id===id); if(!it) return; $('hookInput').value = it.text; showTab('hook'); }
+
+/* ================= نسخة احتياطية ================= */
+$('backupExport').onclick = () => {
+  const payload = {
+    app: 'makina-content-engine',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    archive: getArc(),
+    ideas: getIdeas()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'makina-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  $('backupStatus').classList.remove('err');
+  $('backupStatus').textContent = '✓ انحفظت النسخة الاحتياطية';
+};
+
+$('backupImport').onclick = () => $('backupFile').click();
+$('backupFile').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const st = $('backupStatus'); st.classList.remove('err');
+  const rd = new FileReader();
+  rd.onload = ev => {
+    let data;
+    try{ data = JSON.parse(ev.target.result); }
+    catch(err){ st.textContent = '⚠️ الملف تالف او مو JSON صحيح'; st.classList.add('err'); return; }
+    if(!data || (!Array.isArray(data.archive) && !Array.isArray(data.ideas))){
+      st.textContent = '⚠️ هذا مو ملف نسخة احتياطية صحيح'; st.classList.add('err'); return;
+    }
+    const curArc = getArc(), curIdeas = getIdeas();
+    const mergedArc = mergeById(curArc, Array.isArray(data.archive) ? data.archive : []);
+    const mergedIdeas = mergeById(curIdeas, Array.isArray(data.ideas) ? data.ideas : []);
+    const addedArc = mergedArc.length - curArc.length;
+    const addedIdeas = mergedIdeas.length - curIdeas.length;
+    if(!confirm('لكينا '+addedArc+' توليدة و'+addedIdeas+' فكرة جديدة بالملف. ندمجهن مع الموجود حالياً؟')){
+      e.target.value = ''; return;
+    }
+    localStorage.setItem(ARCK, JSON.stringify(mergedArc.slice(0,60)));
+    localStorage.setItem(IDK, JSON.stringify(mergedIdeas));
+    updateStats(); renderArc(); renderIdeas();
+    st.textContent = '✓ انضاف '+addedArc+' توليدة و'+addedIdeas+' فكرة';
+    e.target.value = '';
+  };
+  rd.readAsText(f);
+};
+function mergeById(current, incoming){
+  const ids = new Set(current.map(x=>x.id));
+  const merged = current.concat(incoming.filter(x=>x && x.id!=null && !ids.has(x.id)));
+  return merged.sort((a,b)=>(b.id||0)-(a.id||0));
+}
 
 updateStats();
 loadSet();
