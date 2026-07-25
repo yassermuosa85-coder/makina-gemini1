@@ -544,9 +544,11 @@ $('audCarBtn').onclick = async ()=>{
 };
 
 $('carGo').onclick = async ()=>{
-  const topic = $('carInput').value.trim(); if(!topic) return;
+  const st = $('carStatus');
+  const topic = $('carInput').value.trim();
+  if(!topic){ st.classList.add('err'); st.textContent = '⚠️ اكتب الخبر أو الموضوع أول'; return; }
   const n = clamp(parseInt($('carCount').value) || 6, 2, 10);
-  const st = $('carStatus'); busy(st,'دا نولّد الكاروسيل...');
+  busy(st,'دا نولّد الكاروسيل...');
   try{
     const data = await geminiJSON(
 `حوّل هذا الموضوع لكاروسيل انستغرام من ${n} شرائح بستايل تحريري قوي:
@@ -614,8 +616,10 @@ function bindHookAudienceBtn(topic){
   };
 }
 $('hookGo').onclick = async ()=>{
-  const t = $('hookInput').value.trim(); if(!t) return;
-  const st = $('hookStatus'); busy(st,'دا نولّد الهوكات...');
+  const st = $('hookStatus');
+  const t = $('hookInput').value.trim();
+  if(!t){ st.classList.add('err'); st.textContent = '⚠️ اكتب موضوع الريل أول'; return; }
+  busy(st,'دا نولّد الهوكات...');
   try{
     const d = await geminiJSON(
 `الموضوع: "${t}"
@@ -687,8 +691,10 @@ async function quickTrendScript(btn){
 
 /* ================= الكابشن ================= */
 $('capGo').onclick = async ()=>{
-  const t = $('capInput').value.trim(); if(!t) return;
-  const st = $('capStatus'); busy(st,'دا نكتب...');
+  const st = $('capStatus');
+  const t = $('capInput').value.trim();
+  if(!t){ st.classList.add('err'); st.textContent = '⚠️ اكتب موضوع البوست أول'; return; }
+  busy(st,'دا نكتب...');
   try{
     const txt = await gemini(`اكتب كابشن انستغرام كامل لبوست عن: "${t}". الهيكل: هوك اول سطر يوكّف السكرول + 3-4 اسطر قيمة + CTA (تابع @y.tyle) + 8 هاشتاكات عراقية وتقنية. عراقي بحت، بدون مقدمات.`);
     $('capOut').innerHTML = '<div class="card"><div class="tag">CAPTION</div><div id="capR" style="white-space:pre-wrap">'+esc(txt)+'</div><button class="copybtn" onclick="copyEl(\'capR\',this)">انسخ</button></div>';
@@ -875,8 +881,10 @@ $('trendGo').onclick = async ()=>{
 
 /* ================= خطة نمو 30 يوم ================= */
 $('goalGo').onclick = async ()=>{
-  const goal = $('goalInput').value.trim(); if(!goal) return;
-  const st = $('goalStatus'); busy(st,'دا نبني الخطة...');
+  const st = $('goalStatus');
+  const goal = $('goalInput').value.trim();
+  if(!goal){ st.classList.add('err'); st.textContent = '⚠️ اكتب هدفك بالمتابعين أول'; return; }
+  busy(st,'دا نبني الخطة...');
   try{
     const d = await geminiJSON(`هدف صانع محتوى عراقي (@y.tyle، 34K متابع): "${goal}". ابنيلة خطة نمو 4 اسابيع.
 رجّع JSON فقط: {"weeks":[{"week":1,"focus":"تركيز الاسبوع بجملة","actions":["3-4 خطوات عملية يومية/اسبوعية"]}]}
@@ -895,8 +903,10 @@ $('goalGo').onclick = async ()=>{
 
 /* ================= محلل الهوكات ================= */
 $('hookanGo').onclick = async ()=>{
-  const t = $('hookanInput').value.trim(); if(!t) return;
-  const st = $('hookanStatus'); busy(st,'دا نحلل...');
+  const st = $('hookanStatus');
+  const t = $('hookanInput').value.trim();
+  if(!t){ st.classList.add('err'); st.textContent = '⚠️ الصك الهوك اللي تريد تحلله أول'; return; }
+  busy(st,'دا نحلل...');
   try{
     const d = await geminiJSON(`حلل هذا الهوك: "${t}"
 حسب صيغة: (1) نفي شي مشهور (2) ليش لا (3) البديل (4) ليش افضل.
@@ -912,8 +922,10 @@ $('hookanGo').onclick = async ()=>{
 
 /* ================= تدوير المحتوى ================= */
 $('repGo').onclick = async ()=>{
-  const t = $('repInput').value.trim(); if(!t) return;
-  const st = $('repStatus'); busy(st,'دا ندوّر المحتوى...');
+  const st = $('repStatus');
+  const t = $('repInput').value.trim();
+  if(!t){ st.classList.add('err'); st.textContent = '⚠️ الصك النص اللي تريد تدوّره أول'; return; }
+  busy(st,'دا ندوّر المحتوى...');
   try{
     const d = await geminiJSON(`هذا محتوى قديم ناجح: "${t}"
 حوّله لثلاث صيغ جديدة بدون تكرار حرفي. رجّع JSON فقط:
@@ -930,9 +942,11 @@ $('repGo').onclick = async ()=>{
 
 /* ================= سلسلة محتوى ================= */
 $('seriesGo').onclick = async ()=>{
-  const t = $('seriesInput').value.trim(); if(!t) return;
+  const st = $('seriesStatus');
+  const t = $('seriesInput').value.trim();
+  if(!t){ st.classList.add('err'); st.textContent = '⚠️ اكتب الموضوع الكبير أول'; return; }
   const n = clamp(parseInt($('seriesCount').value) || 6, 2, 20);
-  const st = $('seriesStatus'); busy(st,'دا نقسم السلسلة...');
+  busy(st,'دا نقسم السلسلة...');
   try{
     const d = await geminiJSON(`قسّم هذا الموضوع لسلسلة محتوى من ${n} حلقات مترابطة تخلي المتابع ينتظر الجزء الجاي: "${t}"
 رجّع JSON فقط: {"episodes":[{"n":1,"title":"عنوان الحلقة","hook":"هوك قصير يربطها بالسلسلة (مثال: الجزء 1 من...)","summary":"سطرين شنو تحتوي"}]}
@@ -951,8 +965,10 @@ $('seriesGo').onclick = async ()=>{
 
 /* ================= قصص شخصية ================= */
 $('storyGo').onclick = async ()=>{
-  const t = $('storyInput').value.trim(); if(!t) return;
-  const st = $('storyStatus'); busy(st,'دا نحول الموقف لقصة...');
+  const st = $('storyStatus');
+  const t = $('storyInput').value.trim();
+  if(!t){ st.classList.add('err'); st.textContent = '⚠️ اكتب الموقف اللي صار وياك أول'; return; }
+  busy(st,'دا نحول الموقف لقصة...');
   try{
     const d = await geminiJSON(`هذا موقف صار مع صانع محتوى: "${t}"
 حوّله لريل بأسلوب قصصي شخصي مشوّق يبني ثقة مع الجمهور. رجّع JSON فقط:
