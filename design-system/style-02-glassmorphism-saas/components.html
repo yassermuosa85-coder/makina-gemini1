@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style 02 — Components — Glassmorphism SaaS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-base:#0D0B1A; --mesh-purple:#8B5CF6; --mesh-magenta:#EC4899; --mesh-cyan:#22D3EE;
+  --glass-bg:rgba(255,255,255,.06); --glass-border:rgba(255,255,255,.16);
+  --text-primary:#F5F3FF; --text-secondary:rgba(245,243,255,.64); --text-tertiary:rgba(245,243,255,.38);
+  --accent:#22D3EE; --accent-2:#A78BFA; --success:#34D399; --danger:#FB7185;
+  --r-md:20px; --r-lg:32px; --r-pill:999px;
+  --font-ar:'IBM Plex Sans Arabic',system-ui,sans-serif;
+  --font-en:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg-base);color:var(--text-primary);font-family:var(--font-ar);padding:64px 48px 160px;position:relative;overflow-x:hidden}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(600px 600px at 12% 8%, rgba(139,92,246,.38), transparent 60%),
+    radial-gradient(700px 700px at 90% 20%, rgba(34,211,238,.28), transparent 60%),
+    radial-gradient(600px 600px at 50% 90%, rgba(236,72,153,.24), transparent 60%);
+  filter:blur(30px);
+}
+.page{position:relative;z-index:1}
+h1{font-size:28px;font-weight:800;margin:0 0 6px}
+.sub{color:var(--text-secondary);font-size:15px;margin:0 0 56px}
+section{margin-bottom:56px}
+section h2{font-family:var(--font-en);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 20px}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+
+.glass{background:var(--glass-bg);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--glass-border);box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12)}
+
+.badge{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-pill);font-family:var(--font-en);font-size:12px;font-weight:700}
+.badge.glass{color:var(--accent)}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+.btn{font-family:var(--font-ar);font-weight:700;font-size:15px;padding:15px 30px;border-radius:var(--r-pill);border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#0B0E14;box-shadow:0 8px 30px rgba(34,211,238,.35)}
+.btn.ghost{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);color:var(--text-primary)}
+
+.card{border-radius:var(--r-md);padding:26px}
+.numcard{width:180px}
+.numcard .n{font-family:var(--font-mono);font-size:40px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.numcard .l{font-size:14px;color:var(--text-secondary);margin-top:6px}
+.infocard{width:260px}
+.infocard .ic{width:38px;height:38px;border-radius:14px;background:rgba(34,211,238,.16);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.infocard h3{font-size:17px;font-weight:700;margin:0 0 6px}
+.infocard p{font-size:13.5px;color:var(--text-secondary);line-height:1.7;margin:0}
+.quotecard{width:420px;border-radius:var(--r-lg);padding:32px}
+.quotecard .q{font-family:var(--font-en);font-size:44px;color:var(--accent-2);line-height:.5;margin-bottom:10px;display:block}
+.quotecard p{font-size:18px;line-height:1.7;margin:0 0 14px;font-weight:500}
+.quotecard .attr{font-size:12.5px;color:var(--text-tertiary);font-family:var(--font-en);letter-spacing:.05em;text-transform:uppercase}
+.highlight{border-radius:var(--r-md);padding:22px 26px;width:420px;border:1px solid rgba(34,211,238,.3)}
+.highlight p{margin:0;font-size:15px;line-height:1.8}
+.ctabox{width:460px;text-align:center;border-radius:var(--r-lg);padding:44px 32px}
+.ctabox h3{font-size:22px;margin:0 0 10px}
+.ctabox p{color:var(--text-secondary);font-size:14px;margin:0 0 22px}
+
+.comprow{display:flex;gap:2px;border-radius:var(--r-md);overflow:hidden;width:560px}
+.comprow > div{flex:1;padding:18px 22px;background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.comprow .h{font-family:var(--font-en);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:6px}
+.comprow .x{color:var(--danger)}
+.comprow .ok{color:var(--success)}
+
+.timeline{display:flex;width:100%;max-width:640px}
+.tl-step{flex:1;position:relative;padding-top:28px}
+.tl-step::before{content:'';position:absolute;top:8px;right:0;left:0;height:2px;background:var(--glass-border)}
+.tl-step.active::before{background:linear-gradient(90deg,var(--accent-2),var(--accent))}
+.tl-step .dot{position:absolute;top:2px;right:0;width:14px;height:14px;border-radius:50%;background:var(--glass-bg);border:2px solid var(--glass-border)}
+.tl-step.active .dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 16px rgba(34,211,238,.6)}
+.tl-step .lbl{font-size:12.5px;color:var(--text-secondary);margin-top:10px}
+
+.progress{width:420px}
+.progress .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--text-secondary)}
+.progress .track{height:8px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--r-pill);overflow:hidden}
+.progress .fill{height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent));border-radius:var(--r-pill)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Style 02 — Glassmorphism SaaS</h1>
+  <p class="sub">مكوّنات زجاجية عائمة فوق خلفية Gradient Mesh — Design Tokens بملف README.md</p>
+
+  <section>
+    <h2>Badges / Tags</h2>
+    <div class="row">
+      <span class="badge glass"><span class="dot"></span> AI</span>
+      <span class="badge glass">دروبشوبينغ</span>
+      <span class="badge glass" style="color:var(--danger)">🔴 عاجل</span>
+      <span class="badge glass" style="color:var(--success)">سوشيال ميديا</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Buttons</h2>
+    <div class="row">
+      <button class="btn primary">تابع @y.tyle →</button>
+      <button class="btn ghost">اعرف اكثر</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Floating Number Card</h2>
+    <div class="row">
+      <div class="card glass numcard"><div class="n">70%</div><div class="l">توفير بالوقت</div></div>
+      <div class="card glass numcard"><div class="n">24/7</div><div class="l">خدمة تلقائية</div></div>
+      <div class="card glass numcard"><div class="n">×3</div><div class="l">أسرع بالرد</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Info Card</h2>
+    <div class="row">
+      <div class="card glass infocard"><div class="ic">⚡</div><h3>سرعة فورية</h3><p>ردود تلقائية بثواني بدل ساعات انتظار من الزبون.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Quote Card</h2>
+    <div class="card glass quotecard">
+      <span class="q">"</span>
+      <p>التاجر الذكي مو اللي يشتغل اكثر، اللي يخلي الأدوات تشتغل عنه.</p>
+      <div class="attr">قاعدة التجارة الذكية</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Highlight Box / CTA Box</h2>
+    <div class="row">
+      <div class="card glass highlight"><p>💡 نصيحة: ابدأ بأداة وحدة بس وتقنها زين، قبل لا تنتقل للثانية.</p></div>
+      <div class="card glass ctabox"><h3>جاهز تبدأ؟</h3><p>تابعنا لمزيد من أدوات الذكاء الاصطناعي والتجارة الإلكترونية</p><button class="btn primary">تابع @y.tyle</button></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Comparison Row</h2>
+    <div class="comprow">
+      <div><div class="h">الطريقة القديمة</div><div class="x">✗ رد يدوي بعد ساعات</div></div>
+      <div><div class="h">بالـ AI</div><div class="ok">✓ رد فوري تلقائي</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Timeline</h2>
+    <div class="timeline">
+      <div class="tl-step active"><div class="dot"></div><div class="lbl">اختار الأداة</div></div>
+      <div class="tl-step active"><div class="dot"></div><div class="lbl">ربطها بالمتجر</div></div>
+      <div class="tl-step"><div class="dot"></div><div class="lbl">شغّلها أوتوماتيك</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Progress Bar</h2>
+    <div class="progress">
+      <div class="top"><span>نسبة الأتمتة</span><span>68%</span></div>
+      <div class="track"><div class="fill" style="width:68%"></div></div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
