@@ -127,6 +127,7 @@ textarea:focus,input:focus{border-color:var(--gold)}
     </div>
   </header>
   <div class="statsbar" id="statsBar">⚡ <b id="statTotal">0</b> توليدة · 🏭 <b id="statCar">0</b> كاروسيل · 🎬 <b id="statReel">0</b> ريلز/هوكات · ⭐ <b id="statStar">0</b> ناجحة</div>
+  <div class="chipsRow" id="groupChips"></div>
 
   <!-- ===== كاروسيل ===== -->
   <section class="tab on" id="tab-car">
@@ -301,17 +302,10 @@ textarea:focus,input:focus{border-color:var(--gold)}
 </div>
 
 <nav>
-  <button class="on" data-t="car"><span class="ic">🏭</span>كاروسيل</button>
-  <button data-t="week"><span class="ic">🗓️</span>أسبوع</button>
-  <button data-t="hook"><span class="ic">🎣</span>هوكات</button>
-  <button data-t="hookan"><span class="ic">🎯</span>محلل</button>
-  <button data-t="rep"><span class="ic">🔁</span>تدوير</button>
-  <button data-t="series"><span class="ic">🧵</span>سلسلة</button>
-  <button data-t="story"><span class="ic">🎭</span>قصص</button>
-  <button data-t="ideas"><span class="ic">📝</span>أفكار</button>
-  <button data-t="news"><span class="ic">📡</span>رادار</button>
-  <button data-t="cap"><span class="ic">✍️</span>كابشن</button>
-  <button data-t="arc"><span class="ic">💾</span>أرشيف</button>
+  <button class="on" data-g="prod"><span class="ic">🏭</span>إنتاج</button>
+  <button data-g="plan"><span class="ic">🗓️</span>تخطيط</button>
+  <button data-g="tools"><span class="ic">🧰</span>أدوات</button>
+  <button data-g="arc"><span class="ic">💾</span>أرشيف</button>
 </nav>
 <script>
 /* ================= إعدادات ================= */
@@ -362,16 +356,41 @@ $('pfpFile').onchange = e => {
 };
 
 /* تنقل التابات */
+const NAVGROUPS = [
+  {id:'prod', tabs:[{t:'car',label:'كاروسيل',ic:'🏭'},{t:'hook',label:'هوكات',ic:'🎣'},{t:'cap',label:'كابشن',ic:'✍️'}]},
+  {id:'plan', tabs:[{t:'week',label:'أسبوع',ic:'🗓️'},{t:'news',label:'رادار',ic:'📡'},{t:'ideas',label:'أفكار',ic:'📝'}]},
+  {id:'tools', tabs:[{t:'hookan',label:'محلل',ic:'🎯'},{t:'rep',label:'تدوير',ic:'🔁'},{t:'series',label:'سلسلة',ic:'🧵'},{t:'story',label:'قصص',ic:'🎭'}]},
+  {id:'arc', tabs:[{t:'arc',label:'أرشيف',ic:'💾'}]}
+];
+const TAB2GROUP = {};
+NAVGROUPS.forEach(g=>g.tabs.forEach(x=>TAB2GROUP[x.t]=g.id));
+let CURRENTTAB = 'car';
+function renderGroupChips(groupId, activeTab){
+  const g = NAVGROUPS.find(x=>x.id===groupId);
+  if(!g || g.tabs.length<2){ $('groupChips').innerHTML=''; return; }
+  $('groupChips').innerHTML = g.tabs.map(x=>
+    '<button class="chip'+(activeTab===x.t?' on':'')+'" onclick="showTab(\''+x.t+'\')">'+x.ic+' '+x.label+'</button>'
+  ).join('');
+}
 function showTab(t){
-  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on', x.dataset.t===t));
+  CURRENTTAB = t;
+  const g = TAB2GROUP[t] || t;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on', x.dataset.g===g));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
   $('tab-'+t).classList.add('on');
+  renderGroupChips(g, t);
   if(t==='arc') renderArc();
   if(t==='ideas') renderIdeas();
   if(t==='car') sizeStage();
   window.scrollTo(0,0);
 }
-document.querySelectorAll('nav button').forEach(b=>{ b.onclick=()=>showTab(b.dataset.t); });
+document.querySelectorAll('nav button').forEach(b=>{
+  b.onclick = ()=>{
+    const g = NAVGROUPS.find(x=>x.id===b.dataset.g);
+    const alreadyActive = b.classList.contains('on');
+    showTab(alreadyActive ? CURRENTTAB : g.tabs[0].t);
+  };
+});
 $('gearBtn').onclick = ()=>showTab('set');
 
 if('serviceWorker' in navigator){
@@ -1003,6 +1022,7 @@ function mergeById(current, incoming){
 
 updateStats();
 loadSet();
+showTab('car');
 </script>
 </body>
 </html>
