@@ -1010,6 +1010,21 @@ $('backupExport').onclick = () => {
   $('backupStatus').textContent = '✓ انحفظت النسخة الاحتياطية';
 };
 
+const SAFE_HTML_TAGS = new Set(['DIV','SPAN','H3','B','BR','UL','LI','BUTTON','P']);
+const SAFE_HTML_ATTRS = new Set(['class','style']);
+function sanitizeHTML(html){
+  const doc = new DOMParser().parseFromString(String(html||''), 'text/html');
+  const clean = node => {
+    [...node.children].forEach(el=>{
+      if(!SAFE_HTML_TAGS.has(el.tagName)){ el.remove(); return; }
+      [...el.attributes].forEach(attr=>{ if(!SAFE_HTML_ATTRS.has(attr.name)) el.removeAttribute(attr.name); });
+      clean(el);
+    });
+  };
+  clean(doc.body);
+  return doc.body.innerHTML;
+}
+
 $('backupImport').onclick = () => $('backupFile').click();
 $('backupFile').onchange = e => {
   const f = e.target.files[0]; if(!f) return;
@@ -1023,7 +1038,11 @@ $('backupFile').onchange = e => {
       st.textContent = '⚠️ هذا مو ملف نسخة احتياطية صحيح'; st.classList.add('err'); return;
     }
     const curArc = getArc(), curIdeas = getIdeas();
-    const mergedArc = mergeById(curArc, Array.isArray(data.archive) ? data.archive : []);
+    const incomingArc = (Array.isArray(data.archive) ? data.archive : []).map(x=>{
+      if(x && x.data && typeof x.data.html === 'string') return {...x, data:{...x.data, html:sanitizeHTML(x.data.html)}};
+      return x;
+    });
+    const mergedArc = mergeById(curArc, incomingArc);
     const mergedIdeas = mergeById(curIdeas, Array.isArray(data.ideas) ? data.ideas : []);
     const addedArc = mergedArc.length - curArc.length;
     const addedIdeas = mergedIdeas.length - curIdeas.length;
