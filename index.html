@@ -462,6 +462,13 @@ function parseJSON(t){
   const a = t.indexOf('{'), b = t.lastIndexOf('}');
   return JSON.parse(t.slice(a, b+1));
 }
+async function geminiJSON(prompt, opts={}){
+  for(let attempt=0; attempt<2; attempt++){
+    const raw = await gemini(prompt, opts);
+    try{ return parseJSON(raw); }
+    catch(e){ if(attempt===1) throw new Error('ما كدرت افهم رد الذكاء الاصطناعي — جرب مرة ثانية'); }
+  }
+}
 function handleErr(el, e){
   if(e.message === 'NOKEY'){ el.textContent = '⚠️ روح للإعدادات وحط مفتاح Gemini API أول'; }
   else el.textContent = '⚠️ صار خطأ: ' + e.message;
@@ -541,7 +548,7 @@ $('carGo').onclick = async ()=>{
   const n = clamp(parseInt($('carCount').value) || 6, 2, 10);
   const st = $('carStatus'); busy(st,'دا نولّد الكاروسيل...');
   try{
-    const raw = await gemini(
+    const data = await geminiJSON(
 `حوّل هذا الموضوع لكاروسيل انستغرام من ${n} شرائح بستايل تحريري قوي:
 "${topic}"
 
@@ -549,7 +556,6 @@ $('carGo').onclick = async ()=>{
 {"slides":[{"tag":"كلمة او كلمتين فوك العنوان","title":"عنوان قصير قوي (اقصى 8 كلمات)","body":"نص الشريحة (سطرين لثلاثة، او فارغ للغلاف)","theme":"dark او light"}],"caption":"كابشن كامل: هوك + قيمة + CTA + هاشتاكات"}
 
 الشريحة الاولى غلاف بعنوان صادم بدون body طويل. الاخيرة CTA (تابع @y.tyle). كل النصوص عراقي بحت.`+styleMemoryLine(), {json:true});
-    const data = parseJSON(raw);
     SLIDES = data.slides.map(s=>({...s, title:fixDialect(s.title||''), body:fixDialect(s.body||''), tag:fixDialect(s.tag||'')}));
     CUR = 0; showSlide();
     $('carArea').style.display = 'block';
@@ -611,14 +617,13 @@ $('hookGo').onclick = async ()=>{
   const t = $('hookInput').value.trim(); if(!t) return;
   const st = $('hookStatus'); busy(st,'دا نولّد الهوكات...');
   try{
-    const raw = await gemini(
+    const d = await geminiJSON(
 `الموضوع: "${t}"
 ولّد JSON فقط:
 {"hooks":["5 هوكات مختلفة، كل واحد بصيغة الاربع خطوات مدموجة بجملة او جملتين"],
 "script":[{"phase":"هوك او محتوى او CTA","sec":"مثال 0-3","text":"النص الصوتي","shot":"وصف قصير للقطة المقترحة (زاوية، حركة، عنصر بالشاشة)"}],
 "thumbTexts":["3 اقتراحات نص ثمبنيل صادم، 3-5 كلمات لكل وحدة"]}
 السكربت لريل 30-45 ثانية بثلاث مراحل: هوك (0-3s)، محتوى (3-15s تقريباً)، CTA (15-25s تقريباً) — ممكن تقسم المحتوى لأكثر من مشهد. كله عراقي بحت.`+styleMemoryLine(), {json:true});
-    const d = parseJSON(raw);
     let h = '';
     (d.hooks||[]).forEach((x,i)=>{ h += '<div class="card"><div class="tag">HOOK '+(i+1)+'</div><div id="hk'+i+'">'+esc(fixDialect(x))+'</div><button class="copybtn" onclick="copyEl(\'hk'+i+'\',this)">انسخ</button></div>'; });
     h += '<div class="card"><div class="tag">SCRIPT — سكربت الريل بالثواني</div>';
@@ -831,13 +836,12 @@ $('weekGo').onclick = async ()=>{
   const niche = $('weekInput').value.trim() || 'الذكاء الاصطناعي والتقنية';
   const st = $('weekStatus'); busy(st,'دا نبحث ونخطط الأسبوع... (ياخذ شوي)');
   try{
-    const raw = await gemini(
+    const d = await geminiJSON(
 `دوّر بالبحث عن اهم واحدث اخبار وترندات مجال: ${niche}.
 بعدها اختار 7 مواضيع قوية ووزعهن على اسبوع كامل: 3 كاروسيلات + 3 ريلز + 1 ستوري.
 رجّع JSON فقط بدون اي نص قبله او بعده:
 {"plan":[{"day":"السبت","type":"carousel او reel او story","topic":"الموضوع بجملة","hook":"هوك بصيغة: نفي مشهور، ليش لا، البديل، ليش افضل","caption":"سطر كابشن","storyIdea":"اقتراح ستوري تفاعلي ليذاك اليوم (سؤال او استفتاء او سلايدر)"}]}
 كله باللهجة العراقية البحتة.`, {search:true});
-    const d = parseJSON(raw);
     WEEKPLAN = (d.plan||[]).map(p=>({...p, topic:fixDialect(p.topic||''), hook:fixDialect(p.hook||''), caption:fixDialect(p.caption||''), storyIdea:fixDialect(p.storyIdea||'')}));
     renderWeek();
     saveArc('week', 'خطة أسبوع — '+niche, {plan:WEEKPLAN});
@@ -874,10 +878,9 @@ $('goalGo').onclick = async ()=>{
   const goal = $('goalInput').value.trim(); if(!goal) return;
   const st = $('goalStatus'); busy(st,'دا نبني الخطة...');
   try{
-    const raw = await gemini(`هدف صانع محتوى عراقي (@y.tyle، 34K متابع): "${goal}". ابنيلة خطة نمو 4 اسابيع.
+    const d = await geminiJSON(`هدف صانع محتوى عراقي (@y.tyle، 34K متابع): "${goal}". ابنيلة خطة نمو 4 اسابيع.
 رجّع JSON فقط: {"weeks":[{"week":1,"focus":"تركيز الاسبوع بجملة","actions":["3-4 خطوات عملية يومية/اسبوعية"]}]}
 عراقي بحت، خطوات عملية قابلة للتنفيذ من موبايل.`, {json:true});
-    const d = parseJSON(raw);
     let h = '';
     (d.weeks||[]).forEach(w=>{
       h += '<div class="card"><div class="tag">اسبوع '+esc(w.week)+'</div><h3>'+esc(fixDialect(w.focus||''))+'</h3><ul style="margin-right:18px">';
@@ -895,10 +898,9 @@ $('hookanGo').onclick = async ()=>{
   const t = $('hookanInput').value.trim(); if(!t) return;
   const st = $('hookanStatus'); busy(st,'دا نحلل...');
   try{
-    const raw = await gemini(`حلل هذا الهوك: "${t}"
+    const d = await geminiJSON(`حلل هذا الهوك: "${t}"
 حسب صيغة: (1) نفي شي مشهور (2) ليش لا (3) البديل (4) ليش افضل.
 رجّع JSON فقط: {"score":رقم من 10,"why":"سطرين ليش هالتقييم، شنو ناقصه","improved":"نسخة محسّنة من نفس الهوك"}`, {json:true});
-    const d = parseJSON(raw);
     const h = '<div class="card"><div class="tag">التقييم</div><h3 style="font-size:30px;color:var(--gold)">'+esc(d.score)+' / 10</h3>'
       +'<div style="margin-top:8px">'+esc(fixDialect(d.why||''))+'</div></div>'
       +'<div class="card"><div class="tag">النسخة المحسّنة</div><div id="hookanImp">'+esc(fixDialect(d.improved||''))+'</div><button class="copybtn" onclick="copyEl(\'hookanImp\',this)">انسخ</button></div>';
@@ -913,11 +915,10 @@ $('repGo').onclick = async ()=>{
   const t = $('repInput').value.trim(); if(!t) return;
   const st = $('repStatus'); busy(st,'دا ندوّر المحتوى...');
   try{
-    const raw = await gemini(`هذا محتوى قديم ناجح: "${t}"
+    const d = await geminiJSON(`هذا محتوى قديم ناجح: "${t}"
 حوّله لثلاث صيغ جديدة بدون تكرار حرفي. رجّع JSON فقط:
 {"reelScript":"سكربت ريل قصير 30 ثانية (هوك/محتوى/CTA)","storyIdea":"فكرة ستوري تفاعلي بنفس الموضوع","caption":"كابشن جديد بزاوية مختلفة"}
 عراقي بحت.`+styleMemoryLine(), {json:true});
-    const d = parseJSON(raw);
     const h = '<div class="card"><div class="tag">🎬 سكربت ريل</div><div id="repR">'+esc(fixDialect(d.reelScript||''))+'</div><button class="copybtn" onclick="copyEl(\'repR\',this)">انسخ</button></div>'
       +'<div class="card"><div class="tag">🔔 فكرة ستوري</div><div id="repS">'+esc(fixDialect(d.storyIdea||''))+'</div><button class="copybtn" onclick="copyEl(\'repS\',this)">انسخ</button></div>'
       +'<div class="card"><div class="tag">✍️ كابشن جديد</div><div id="repC">'+esc(fixDialect(d.caption||''))+'</div><button class="copybtn" onclick="copyEl(\'repC\',this)">انسخ</button></div>';
@@ -933,10 +934,9 @@ $('seriesGo').onclick = async ()=>{
   const n = clamp(parseInt($('seriesCount').value) || 6, 2, 20);
   const st = $('seriesStatus'); busy(st,'دا نقسم السلسلة...');
   try{
-    const raw = await gemini(`قسّم هذا الموضوع لسلسلة محتوى من ${n} حلقات مترابطة تخلي المتابع ينتظر الجزء الجاي: "${t}"
+    const d = await geminiJSON(`قسّم هذا الموضوع لسلسلة محتوى من ${n} حلقات مترابطة تخلي المتابع ينتظر الجزء الجاي: "${t}"
 رجّع JSON فقط: {"episodes":[{"n":1,"title":"عنوان الحلقة","hook":"هوك قصير يربطها بالسلسلة (مثال: الجزء 1 من...)","summary":"سطرين شنو تحتوي"}]}
 عراقي بحت.`+styleMemoryLine(), {json:true});
-    const d = parseJSON(raw);
     let h = '';
     (d.episodes||[]).forEach(ep=>{
       h += '<div class="card"><div class="tag">حلقة '+esc(ep.n)+' / '+n+'</div><h3>'+esc(fixDialect(ep.title||''))+'</h3>'
@@ -954,11 +954,10 @@ $('storyGo').onclick = async ()=>{
   const t = $('storyInput').value.trim(); if(!t) return;
   const st = $('storyStatus'); busy(st,'دا نحول الموقف لقصة...');
   try{
-    const raw = await gemini(`هذا موقف صار مع صانع محتوى: "${t}"
+    const d = await geminiJSON(`هذا موقف صار مع صانع محتوى: "${t}"
 حوّله لريل بأسلوب قصصي شخصي مشوّق يبني ثقة مع الجمهور. رجّع JSON فقط:
 {"hook":"هوك يفتح القصة بفضول","script":["3-5 اسطر تسرد القصة بالترتيب"],"caption":"كابشن يلخص العبرة + CTA"}
 عراقي بحت، أسلوب شخصي دافئ مو رسمي.`+styleMemoryLine(), {json:true});
-    const d = parseJSON(raw);
     const h = '<div class="card"><div class="tag">الهوك</div><div id="stH">'+esc(fixDialect(d.hook||''))+'</div><button class="copybtn" onclick="copyEl(\'stH\',this)">انسخ</button></div>'
       +'<div class="card"><div class="tag">القصة</div>'+(d.script||[]).map(l=>'<div style="margin-top:8px">'+esc(fixDialect(l))+'</div>').join('')+'</div>'
       +'<div class="card"><div class="tag">الكابشن</div><div id="stC">'+esc(fixDialect(d.caption||''))+'</div><button class="copybtn" onclick="copyEl(\'stC\',this)">انسخ</button></div>';
