@@ -368,6 +368,7 @@ function showTab(t){
   $('tab-'+t).classList.add('on');
   if(t==='arc') renderArc();
   if(t==='ideas') renderIdeas();
+  if(t==='car') sizeStage();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('nav button').forEach(b=>{ b.onclick=()=>showTab(b.dataset.t); });
@@ -448,6 +449,18 @@ function slideHTML(s, i, n){
   inner += '</div>' + brandBar();
   return '<div class="slide '+cls+'">'+inner+'</div>';
 }
+function sizeStage(){
+  const stage = $('stage');
+  const w = stage.clientWidth;
+  if(!w) return;
+  const inner = stage.querySelector('.inner');
+  inner.style.width = w+'px';
+  inner.style.height = (w*1350/1080)+'px';
+  $('frame').style.transform = 'scale('+(w/1080)+')';
+}
+let sizeStageTimer;
+window.addEventListener('resize', ()=>{ clearTimeout(sizeStageTimer); sizeStageTimer = setTimeout(sizeStage,120); });
+
 function showSlide(){
   const n = SLIDES.length;
   $('frame').innerHTML = slideHTML(SLIDES[CUR], CUR, n);
@@ -496,6 +509,7 @@ $('carGo').onclick = async ()=>{
     SLIDES = data.slides.map(s=>({...s, title:fixDialect(s.title||''), body:fixDialect(s.body||''), tag:fixDialect(s.tag||'')}));
     CUR = 0; showSlide();
     $('carArea').style.display = 'block';
+    sizeStage();
     $('capText').textContent = fixDialect(data.caption||'');
     $('capCard').style.display = 'block';
     saveArc('car', SLIDES[0]?.title || topic.slice(0,50), {slides:SLIDES, caption:fixDialect(data.caption||'')});
@@ -700,6 +714,7 @@ function restoreArc(id){
     SLIDES = x.data.slides; CUR = 0; showSlide();
     $('carArea').style.display='block'; $('capText').textContent = x.data.caption||''; $('capCard').style.display='block';
     showTab('car');
+    sizeStage();
   } else if(isGoalPlan){
     $('goalOut').innerHTML = x.data.html || ''; showTab('week');
   } else if(x.type==='week'){ WEEKPLAN = x.data.plan; renderWeek(); showTab('week'); }
