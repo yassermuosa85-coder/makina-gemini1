@@ -133,7 +133,7 @@ textarea:focus,input:focus{border-color:var(--gold)}
     <h2 class="sec">🏭 مكينة الكاروسيل</h2>
     <p class="hint">الصك الخبر أو الموضوع، والمكينة تولّد كاروسيل كامل بستايل Editorial Code + كابشن جاهز. التصدير PNG بدقة 1080×1350.</p>
     <textarea id="carInput" placeholder="مثال: OpenAI أطلقت موديل جديد اسمه..."></textarea>
-    <input type="text" id="carCount" placeholder="عدد الشرائح (افتراضي 6)" inputmode="numeric" style="margin-top:10px">
+    <input type="text" id="carCount" placeholder="عدد الشرائح (افتراضي 6، من 2 لين 10)" inputmode="numeric" style="margin-top:10px">
     <button class="btn" id="carGo">ولّد الكاروسيل ⚡</button>
     <div class="status" id="carStatus"></div>
     <div id="carArea" style="display:none">
@@ -240,7 +240,7 @@ textarea:focus,input:focus{border-color:var(--gold)}
     <h2 class="sec">🧵 سلسلة محتوى</h2>
     <p class="hint">اعطيه موضوع كبير، يقسمه لحلقات مترابطة — السلاسل تخلي المتابعين ينتظرون الجزء الجاي.</p>
     <textarea id="seriesInput" placeholder="الموضوع الكبير... مثال: كل شي عن الذكاء الاصطناعي للمبتدئين"></textarea>
-    <input type="text" id="seriesCount" placeholder="عدد الحلقات (افتراضي 6)" inputmode="numeric" style="margin-top:10px">
+    <input type="text" id="seriesCount" placeholder="عدد الحلقات (افتراضي 6، من 2 لين 20)" inputmode="numeric" style="margin-top:10px">
     <button class="btn" id="seriesGo">قسّمها لسلسلة ⚡</button>
     <div class="status" id="seriesStatus"></div>
     <div id="seriesOut"></div>
@@ -318,6 +318,7 @@ textarea:focus,input:focus{border-color:var(--gold)}
 const LS = {key:'mk_gemini_key', model:'mk_gemini_model', pfp:'mk_pfp_b64'};
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const clamp = (n,min,max) => Math.min(Math.max(n,min),max);
 let PFP = localStorage.getItem(LS.pfp) || '';
 
 const THEME_KEY = 'mk_theme';
@@ -399,8 +400,18 @@ async function gemini(userText, {json=false, search=false} = {}){
   };
   if(json && !search) body.generationConfig.responseMimeType = 'application/json';
   if(search) body.tools = [{google_search:{}}];
-  const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',
-    {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+  const controller = new AbortController();
+  const timeoutId = setTimeout(()=>controller.abort(), 45000);
+  let r;
+  try{
+    r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',
+      {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body),signal:controller.signal});
+  }catch(err){
+    if(err.name === 'AbortError') throw new Error('انتهت مهلة الاتصال (45 ثانية) — جرب مرة ثانية');
+    throw new Error('فشل الاتصال — تأكد من النت وحاول مرة ثانية');
+  }finally{
+    clearTimeout(timeoutId);
+  }
   const d = await r.json();
   if(d.error) throw new Error(d.error.message || 'API error');
   const parts = d.candidates?.[0]?.content?.parts || [];
@@ -470,7 +481,7 @@ $('audCarBtn').onclick = async ()=>{
 
 $('carGo').onclick = async ()=>{
   const topic = $('carInput').value.trim(); if(!topic) return;
-  const n = parseInt($('carCount').value) || 6;
+  const n = clamp(parseInt($('carCount').value) || 6, 2, 10);
   const st = $('carStatus'); busy(st,'دا نولّد الكاروسيل...');
   try{
     const raw = await gemini(
@@ -629,7 +640,12 @@ function getArc(){ try{ return JSON.parse(localStorage.getItem(ARCK)||'[]'); }ca
 function saveArc(type, title, data){
   const a = getArc();
   a.unshift({id:Date.now(), ts:new Date().toLocaleString('ar-IQ',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}), type, title, data, success:false});
-  localStorage.setItem(ARCK, JSON.stringify(a.slice(0,60)));
+  try{
+    localStorage.setItem(ARCK, JSON.stringify(a.slice(0,60)));
+  }catch(e){
+    try{ localStorage.setItem(ARCK, JSON.stringify(a.slice(0,20))); }
+    catch(e2){ /* التخزين ممتلئ تماماً — التوليد نجح، فقط ما انحفظ بالأرشيف */ }
+  }
   updateStats();
 }
 const ARCICON = {car:'🏭', hook:'🎣', news:'📡', trend:'🔥', cap:'✍️', week:'🗓️', goal:'📈', hookan:'🎯', rep:'🔁', series:'🧵', story:'🎭'};
@@ -855,7 +871,7 @@ $('repGo').onclick = async ()=>{
 /* ================= سلسلة محتوى ================= */
 $('seriesGo').onclick = async ()=>{
   const t = $('seriesInput').value.trim(); if(!t) return;
-  const n = parseInt($('seriesCount').value) || 6;
+  const n = clamp(parseInt($('seriesCount').value) || 6, 2, 20);
   const st = $('seriesStatus'); busy(st,'دا نقسم السلسلة...');
   try{
     const raw = await gemini(`قسّم هذا الموضوع لسلسلة محتوى من ${n} حلقات مترابطة تخلي المتابع ينتظر الجزء الجاي: "${t}"
