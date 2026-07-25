@@ -528,6 +528,16 @@ $('expAll').onclick = async ()=>{
 };
 
 /* ================= الهوكات ================= */
+function bindHookAudienceBtn(topic){
+  const btn = $('audHookBtn'); if(!btn) return;
+  btn.onclick = async ()=>{
+    const el = $('audHookOut'); busy(el,'دا نسولف وياهم...');
+    try{
+      const txt = await gemini(`تخيل 5 متابعين عراقيين مختلفين شافوا ريل عنوانه: "${topic}". اكتب تعليق قصير واقعي لكل واحد، سطر وحد يبدا بايموجي واسم الشخصية.`);
+      el.innerHTML = '<div class="card"><div class="tag">AUDIENCE SIM</div><div style="white-space:pre-wrap">'+esc(txt)+'</div></div>';
+    }catch(e){ handleErr(el,e); }
+  };
+}
 $('hookGo').onclick = async ()=>{
   const t = $('hookInput').value.trim(); if(!t) return;
   const st = $('hookStatus'); busy(st,'دا نولّد الهوكات...');
@@ -554,14 +564,8 @@ $('hookGo').onclick = async ()=>{
     h += '<button class="btn ghost" onclick="makeThumb($(\'hookInput\').value.trim())">🖼️ ثمبنيل بعنوان الموضوع</button>';
     h += '<button class="btn ghost" id="audHookBtn">🗣️ شنو يكولون الجمهور؟</button><div id="audHookOut"></div>';
     $('hookOut').innerHTML = h;
-    $('audHookBtn').onclick = async ()=>{
-      const el = $('audHookOut'); busy(el,'دا نسولف وياهم...');
-      try{
-        const txt = await gemini(`تخيل 5 متابعين عراقيين مختلفين شافوا ريل عنوانه: "${t}". اكتب تعليق قصير واقعي لكل واحد، سطر وحد يبدا بايموجي واسم الشخصية.`);
-        el.innerHTML = '<div class="card"><div class="tag">AUDIENCE SIM</div><div style="white-space:pre-wrap">'+esc(txt)+'</div></div>';
-      }catch(e){ handleErr(el,e); }
-    };
-    saveArc('hook', t.slice(0,50), {html:h});
+    bindHookAudienceBtn(t);
+    saveArc('hook', t.slice(0,50), {html:h, topic:t});
     st.textContent = '✓ جاهز';
   }catch(e){ handleErr(st,e); }
 };
@@ -628,8 +632,8 @@ function saveArc(type, title, data){
   localStorage.setItem(ARCK, JSON.stringify(a.slice(0,60)));
   updateStats();
 }
-const ARCICON = {car:'🏭', hook:'🎣', news:'📡', trend:'🔥', cap:'✍️', week:'🗓️', hookan:'🎯', rep:'🔁', series:'🧵', story:'🎭'};
-const ARCLABEL = {car:'كاروسيل', hook:'هوكات', news:'أخبار', trend:'ترند', cap:'كابشن', week:'أسبوع', hookan:'محلل', rep:'تدوير', series:'سلسلة', story:'قصص'};
+const ARCICON = {car:'🏭', hook:'🎣', news:'📡', trend:'🔥', cap:'✍️', week:'🗓️', goal:'📈', hookan:'🎯', rep:'🔁', series:'🧵', story:'🎭'};
+const ARCLABEL = {car:'كاروسيل', hook:'هوكات', news:'أخبار', trend:'ترند', cap:'كابشن', week:'أسبوع', goal:'خطة نمو', hookan:'محلل', rep:'تدوير', series:'سلسلة', story:'قصص'};
 let ARCFILTER = 'all', ARCQ = '';
 function renderChips(){
   const types = ['all', ...Object.keys(ARCLABEL)];
@@ -675,15 +679,19 @@ function updateStats(){
 }
 function restoreArc(id){
   const x = getArc().find(i=>i.id===id); if(!x) return;
+  const isGoalPlan = x.type==='goal' || (x.type==='week' && /^خطة نمو —/.test(x.title||''));
   if(x.type==='car'){
     SLIDES = x.data.slides; CUR = 0; showSlide();
     $('carArea').style.display='block'; $('capText').textContent = x.data.caption||''; $('capCard').style.display='block';
     showTab('car');
+  } else if(isGoalPlan){
+    $('goalOut').innerHTML = x.data.html || ''; showTab('week');
   } else if(x.type==='week'){ WEEKPLAN = x.data.plan; renderWeek(); showTab('week'); }
   else {
     const target = {hook:'hookOut', news:'newsOut', trend:'newsOut', cap:'capOut', hookan:'hookanOut', rep:'repOut', series:'seriesOut', story:'storyOut'}[x.type];
     const tab = {trend:'news', hookan:'hookan', rep:'rep', series:'series', story:'story'}[x.type] || x.type;
     $(target).innerHTML = x.data.html; showTab(tab);
+    if(x.type==='hook') bindHookAudienceBtn(x.data.topic || x.title);
   }
 }
 
@@ -802,7 +810,7 @@ $('goalGo').onclick = async ()=>{
       h += '</ul></div>';
     });
     $('goalOut').innerHTML = h;
-    saveArc('week', 'خطة نمو — '+goal.slice(0,40), {plan:WEEKPLAN, html:h});
+    saveArc('goal', 'خطة نمو — '+goal.slice(0,40), {html:h});
     st.textContent = '✓ جاهزة';
   }catch(e){ handleErr(st,e); }
 };
