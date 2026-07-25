@@ -125,7 +125,7 @@ textarea:focus,input:focus{border-color:var(--gold)}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="pill" id="modelPill">gemini</div>
-      <button id="gearBtn" style="background:var(--panel2);border:1px solid var(--line);border-radius:10px;font-size:16px;padding:6px 10px;cursor:pointer">⚙️</button>
+      <button id="gearBtn" aria-label="الإعدادات" style="background:var(--panel2);border:1px solid var(--line);border-radius:10px;font-size:16px;padding:6px 10px;cursor:pointer">⚙️</button>
     </div>
   </header>
   <div class="statsbar" id="statsBar">⚡ <b id="statTotal">0</b> توليدة · 🏭 <b id="statCar">0</b> كاروسيل · 🎬 <b id="statReel">0</b> ريلز/هوكات · ⭐ <b id="statStar">0</b> ناجحة</div>
@@ -142,7 +142,7 @@ textarea:focus,input:focus{border-color:var(--gold)}
     <div id="carArea" style="display:none">
       <div id="stage"><div class="inner"><div class="frame" id="frame"></div></div></div>
       <div class="slidebar">
-        <button id="prevS">‹</button><span id="sNum">1 / 1</span><button id="nextS">›</button>
+        <button id="prevS" aria-label="الشريحة السابقة">‹</button><span id="sNum">1 / 1</span><button id="nextS" aria-label="الشريحة التالية">›</button>
       </div>
       <button class="btn ghost" id="editToggle">✏️ عدّل نص الشريحة</button>
       <div id="editArea" style="display:none;margin-top:10px">
@@ -157,7 +157,7 @@ textarea:focus,input:focus{border-color:var(--gold)}
       <div class="card" id="capCard" style="display:none">
         <div class="tag">CAPTION</div>
         <div id="capText" style="white-space:pre-wrap"></div>
-        <button class="copybtn" onclick="copyEl('capText')">انسخ الكابشن</button>
+        <button class="copybtn" onclick="copyEl('capText',this)">انسخ الكابشن</button>
       </div>
     </div>
   </section>
@@ -449,7 +449,12 @@ function handleErr(el, e){
   else el.textContent = '⚠️ صار خطأ: ' + e.message;
   el.classList.add('err');
 }
-function copyEl(id){ navigator.clipboard.writeText($(id).innerText); }
+function copyEl(id, btn){
+  const flash = (msg)=>{ if(!btn) return; const old = btn.textContent; btn.textContent = msg; setTimeout(()=>{ btn.textContent = old; }, 1500); };
+  navigator.clipboard.writeText($(id).innerText)
+    .then(()=>flash('✓ انتسخ'))
+    .catch(()=>flash('⚠️ ما انتسخ'));
+}
 const busy = (el,msg)=>{ el.classList.remove('err'); el.innerHTML = msg+'<span class="spin"></span>'; };
 
 /* ================= الكاروسيل ================= */
@@ -597,7 +602,7 @@ $('hookGo').onclick = async ()=>{
 السكربت لريل 30-45 ثانية بثلاث مراحل: هوك (0-3s)، محتوى (3-15s تقريباً)، CTA (15-25s تقريباً) — ممكن تقسم المحتوى لأكثر من مشهد. كله عراقي بحت.`+styleMemoryLine(), {json:true});
     const d = parseJSON(raw);
     let h = '';
-    (d.hooks||[]).forEach((x,i)=>{ h += '<div class="card"><div class="tag">HOOK '+(i+1)+'</div><div id="hk'+i+'">'+esc(fixDialect(x))+'</div><button class="copybtn" onclick="copyEl(\'hk'+i+'\')">انسخ</button></div>'; });
+    (d.hooks||[]).forEach((x,i)=>{ h += '<div class="card"><div class="tag">HOOK '+(i+1)+'</div><div id="hk'+i+'">'+esc(fixDialect(x))+'</div><button class="copybtn" onclick="copyEl(\'hk'+i+'\',this)">انسخ</button></div>'; });
     h += '<div class="card"><div class="tag">SCRIPT — سكربت الريل بالثواني</div>';
     (d.script||[]).forEach(s=>{ h += '<div style="border-right:3px solid var(--accent);padding-right:10px;margin:12px 0"><b style="color:var(--gold)">'+esc(fixDialect(s.phase||''))+'</b> <span style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--dim)">'+esc(s.sec||'')+'s</span><br>'+esc(fixDialect(s.text||''))+(s.shot?'<div style="margin-top:4px;color:var(--dim);font-size:12px">🎥 '+esc(fixDialect(s.shot))+'</div>':'')+'</div>'; });
     h += '</div>';
@@ -663,7 +668,7 @@ $('capGo').onclick = async ()=>{
   const st = $('capStatus'); busy(st,'دا نكتب...');
   try{
     const txt = await gemini(`اكتب كابشن انستغرام كامل لبوست عن: "${t}". الهيكل: هوك اول سطر يوكّف السكرول + 3-4 اسطر قيمة + CTA (تابع @y.tyle) + 8 هاشتاكات عراقية وتقنية. عراقي بحت، بدون مقدمات.`);
-    $('capOut').innerHTML = '<div class="card"><div class="tag">CAPTION</div><div id="capR" style="white-space:pre-wrap">'+esc(txt)+'</div><button class="copybtn" onclick="copyEl(\'capR\')">انسخ</button></div>';
+    $('capOut').innerHTML = '<div class="card"><div class="tag">CAPTION</div><div id="capR" style="white-space:pre-wrap">'+esc(txt)+'</div><button class="copybtn" onclick="copyEl(\'capR\',this)">انسخ</button></div>';
     saveArc('cap', t.slice(0,50), {html:$('capOut').innerHTML});
     st.textContent = '✓ جاهز';
   }catch(e){ handleErr(st,e); }
@@ -701,7 +706,7 @@ function renderArc(){
   if(!a.length){ $('arcList').innerHTML = '<div class="card">ما لكينا نتائج — جرّب فلتر ثاني أو ولّد شي جديد 👌</div>'; return; }
   $('arcList').innerHTML = a.map(x=>
     '<div class="card"><div class="tag">'+(ARCICON[x.type]||'📦')+' '+x.ts+'</div>'
-    +'<button class="starbtn" onclick="toggleSuccess('+x.id+')" title="علّمها ناجحة">'+(x.success?'⭐':'☆')+'</button> '
+    +'<button class="starbtn" onclick="toggleSuccess('+x.id+')" title="علّمها ناجحة" aria-label="'+(x.success?'الغِ تعليمها كناجحة':'علّمها ناجحة')+'">'+(x.success?'⭐':'☆')+'</button> '
     +'<h3 style="display:inline">'+esc(x.title)+'</h3>'
     +'<div style="margin-top:8px"><button class="copybtn" onclick="restoreArc('+x.id+')">استرجاع ←</button> '
     +'<button class="copybtn" style="color:#ff7a6b" onclick="delArc('+x.id+')">حذف</button></div></div>'
@@ -878,7 +883,7 @@ $('hookanGo').onclick = async ()=>{
     const d = parseJSON(raw);
     const h = '<div class="card"><div class="tag">التقييم</div><h3 style="font-size:30px;color:var(--gold)">'+esc(d.score)+' / 10</h3>'
       +'<div style="margin-top:8px">'+esc(fixDialect(d.why||''))+'</div></div>'
-      +'<div class="card"><div class="tag">النسخة المحسّنة</div><div id="hookanImp">'+esc(fixDialect(d.improved||''))+'</div><button class="copybtn" onclick="copyEl(\'hookanImp\')">انسخ</button></div>';
+      +'<div class="card"><div class="tag">النسخة المحسّنة</div><div id="hookanImp">'+esc(fixDialect(d.improved||''))+'</div><button class="copybtn" onclick="copyEl(\'hookanImp\',this)">انسخ</button></div>';
     $('hookanOut').innerHTML = h;
     saveArc('hookan', t.slice(0,50), {html:h});
     st.textContent = '✓ جاهز';
@@ -895,9 +900,9 @@ $('repGo').onclick = async ()=>{
 {"reelScript":"سكربت ريل قصير 30 ثانية (هوك/محتوى/CTA)","storyIdea":"فكرة ستوري تفاعلي بنفس الموضوع","caption":"كابشن جديد بزاوية مختلفة"}
 عراقي بحت.`+styleMemoryLine(), {json:true});
     const d = parseJSON(raw);
-    const h = '<div class="card"><div class="tag">🎬 سكربت ريل</div><div id="repR">'+esc(fixDialect(d.reelScript||''))+'</div><button class="copybtn" onclick="copyEl(\'repR\')">انسخ</button></div>'
-      +'<div class="card"><div class="tag">🔔 فكرة ستوري</div><div id="repS">'+esc(fixDialect(d.storyIdea||''))+'</div><button class="copybtn" onclick="copyEl(\'repS\')">انسخ</button></div>'
-      +'<div class="card"><div class="tag">✍️ كابشن جديد</div><div id="repC">'+esc(fixDialect(d.caption||''))+'</div><button class="copybtn" onclick="copyEl(\'repC\')">انسخ</button></div>';
+    const h = '<div class="card"><div class="tag">🎬 سكربت ريل</div><div id="repR">'+esc(fixDialect(d.reelScript||''))+'</div><button class="copybtn" onclick="copyEl(\'repR\',this)">انسخ</button></div>'
+      +'<div class="card"><div class="tag">🔔 فكرة ستوري</div><div id="repS">'+esc(fixDialect(d.storyIdea||''))+'</div><button class="copybtn" onclick="copyEl(\'repS\',this)">انسخ</button></div>'
+      +'<div class="card"><div class="tag">✍️ كابشن جديد</div><div id="repC">'+esc(fixDialect(d.caption||''))+'</div><button class="copybtn" onclick="copyEl(\'repC\',this)">انسخ</button></div>';
     $('repOut').innerHTML = h;
     saveArc('rep', t.slice(0,50), {html:h});
     st.textContent = '✓ جاهز';
@@ -936,9 +941,9 @@ $('storyGo').onclick = async ()=>{
 {"hook":"هوك يفتح القصة بفضول","script":["3-5 اسطر تسرد القصة بالترتيب"],"caption":"كابشن يلخص العبرة + CTA"}
 عراقي بحت، أسلوب شخصي دافئ مو رسمي.`+styleMemoryLine(), {json:true});
     const d = parseJSON(raw);
-    const h = '<div class="card"><div class="tag">الهوك</div><div id="stH">'+esc(fixDialect(d.hook||''))+'</div><button class="copybtn" onclick="copyEl(\'stH\')">انسخ</button></div>'
+    const h = '<div class="card"><div class="tag">الهوك</div><div id="stH">'+esc(fixDialect(d.hook||''))+'</div><button class="copybtn" onclick="copyEl(\'stH\',this)">انسخ</button></div>'
       +'<div class="card"><div class="tag">القصة</div>'+(d.script||[]).map(l=>'<div style="margin-top:8px">'+esc(fixDialect(l))+'</div>').join('')+'</div>'
-      +'<div class="card"><div class="tag">الكابشن</div><div id="stC">'+esc(fixDialect(d.caption||''))+'</div><button class="copybtn" onclick="copyEl(\'stC\')">انسخ</button></div>';
+      +'<div class="card"><div class="tag">الكابشن</div><div id="stC">'+esc(fixDialect(d.caption||''))+'</div><button class="copybtn" onclick="copyEl(\'stC\',this)">انسخ</button></div>';
     $('storyOut').innerHTML = h;
     saveArc('story', t.slice(0,50), {html:h});
     st.textContent = '✓ جاهزة';
@@ -953,9 +958,9 @@ function renderIdeas(){
   if(!a.length){ $('ideasOut').innerHTML = '<div class="card">بعدك ما ضفت افكار — اول فكرة تنكتب هنا 👌</div>'; return; }
   $('ideasOut').innerHTML = a.map(x=>
     '<div class="card ideaCard"><div>'+esc(x.text)+'</div><div style="display:flex;gap:6px;flex:none">'
-    +'<button class="copybtn" onclick="ideaToCar('+x.id+')">🏭</button>'
-    +'<button class="copybtn" onclick="ideaToHook('+x.id+')">🎬</button>'
-    +'<button class="copybtn" style="color:#ff7a6b" onclick="delIdea('+x.id+')">🗑️</button></div></div>'
+    +'<button class="copybtn" onclick="ideaToCar('+x.id+')" aria-label="حوّلها كاروسيل">🏭</button>'
+    +'<button class="copybtn" onclick="ideaToHook('+x.id+')" aria-label="حوّلها هوك">🎬</button>'
+    +'<button class="copybtn" style="color:#ff7a6b" onclick="delIdea('+x.id+')" aria-label="احذف الفكرة">🗑️</button></div></div>'
   ).join('');
 }
 $('ideaAdd').onclick = ()=>{
